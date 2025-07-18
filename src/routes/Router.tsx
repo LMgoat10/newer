@@ -48,11 +48,11 @@ const Router = () => {
             element={<SearchResultsPage onNavigate={handleNavigate} />} 
             />
             <Route 
-            path="/destinations" 
+            path="/spots" 
             element={<Destinations />} 
             />
             <Route 
-            path="/destination/:id" 
+            path="/travel/:id" 
             element={<DestinationDetailPage onNavigate={handleNavigate} />} 
             />
             <Route 

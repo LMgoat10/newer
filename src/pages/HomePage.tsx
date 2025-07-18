@@ -106,11 +106,10 @@ function HomePage({ onNavigate }: HomePageProps) {
     <div>
       {/* Main Content */}
       <div className="px-4 py-6">
-        {/* Search Form */}
-        <SearchForm onSearch={handleSearch} />
+        {/* <SearchForm onSearch={handleSearch} /> */}
 
         {/* Service Categories */}
-        <Row gutter={[16, 16]} className="mb-6">
+        {/* <Row gutter={[16, 16]} className="mb-6">
           <Col span={6}>
             <Card 
               hoverable
@@ -182,10 +181,10 @@ function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </Card>
           </Col>
-        </Row>
+        </Row> */}
 
         {/* Recent Searches */}
-        <Card className="mt-6" style={{ marginTop: '16px', borderRadius: '16px' }}>
+        {/* <Card className="mt-6" style={{ marginTop: '16px', borderRadius: '16px' }}>
           <Title level={5} style={{ marginBottom: 16 }}>Recent Searches</Title>
           <Space direction="vertical" size="middle" className="w-full">
             {recentSearches.slice(0, 2).map((search) => (
@@ -221,7 +220,7 @@ function HomePage({ onNavigate }: HomePageProps) {
               </Card>
             ))}
           </Space>
-        </Card>
+        </Card> */}
 
         {/* Hot Spots Section */}
         <Card 
@@ -318,9 +317,9 @@ function HomePage({ onNavigate }: HomePageProps) {
                       borderRadius: '12px',
                       overflow: 'hidden',
                       border: '1px solid #f0f0f0',
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s ease',
+                      padding: '12px'
                     }}
-                    bodyStyle={{ padding: '12px' }}
                     onClick={() => handleSpotClick(spot)}
                   >
                     <div style={{ minHeight: '80px' }}>

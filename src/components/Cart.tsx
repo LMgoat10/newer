@@ -166,14 +166,7 @@ const Cart: React.FC = () => {
         {/* 头部导航 */}
         <div style={{ background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate(-1)}
-              >
-                返回
-              </Button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '64px' }}>
               <Title level={3} style={{ margin: 0 }}>购物车</Title>
               <div style={{ width: '80px' }} />
             </div>
@@ -185,14 +178,20 @@ const Cart: React.FC = () => {
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
             <Breadcrumb>
               <Breadcrumb.Item>
-                <Button type="link" onClick={() => navigate('/home')} style={{ padding: 0 }}>
+                <span 
+                  onClick={() => navigate('/home')} 
+                  style={{ cursor: 'pointer', color: '#1677ff' }}
+                >
                   首页
-                </Button>
+                </span>
               </Breadcrumb.Item>
               <Breadcrumb.Item>
-                <Button type="link" onClick={() => navigate('/destinations')} style={{ padding: 0 }}>
+                <span 
+                  onClick={() => navigate('/spots')} 
+                  style={{ cursor: 'pointer', color: '#1677ff' }}
+                >
                   景点列表
-                </Button>
+                </span>
               </Breadcrumb.Item>
               <Breadcrumb.Item>购物车</Breadcrumb.Item>
             </Breadcrumb>
@@ -263,26 +262,30 @@ const Cart: React.FC = () => {
         </div>
       </div>
 
-      {/* 面包屑导航 */}
-      <div style={{ background: 'white', borderBottom: '1px solid #f0f0f0', padding: '16px 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-          <Breadcrumb>
-            <Breadcrumb.Item>
-              <Button type="link" onClick={() => navigate('/home')} style={{ padding: 0 }}>
-                首页
-              </Button>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Button type="link" onClick={() => navigate('/destinations')} style={{ padding: 0 }}>
-                景点列表
-              </Button>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>购物车</Breadcrumb.Item>
-          </Breadcrumb>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+        {/* 面包屑导航 */}
+        <div style={{ background: 'white', borderBottom: '1px solid #f0f0f0', padding: '16px 0' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+            <Breadcrumb>
+              <Breadcrumb.Item>
+                <span 
+                  onClick={() => navigate('/home')} 
+                  style={{ cursor: 'pointer', color: '#1677ff' }}
+                >
+                  首页
+                </span>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <span 
+                  onClick={() => navigate('/destinations')} 
+                  style={{ cursor: 'pointer', color: '#1677ff' }}
+                >
+                  景点列表
+                </span>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>购物车</Breadcrumb.Item>
+            </Breadcrumb>
+          </div>
+        </div>      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
         <Row gutter={[32, 32]}>
           {/* 左侧商品列表 */}
           <Col xs={24} lg={16}>

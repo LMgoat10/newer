@@ -39,7 +39,7 @@ function Layout({ children }: LayoutProps) {
       {/* Top Navigation */}
       <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
 
-      <Layoutantd className="min-h-screen bg-gray-50" style={{ paddingTop: '120px', paddingLeft: '8px', paddingRight: '8px' }}>
+      <Layoutantd className="min-h-screen bg-gray-50" style={{paddingLeft: '8px', paddingRight: '8px' }}>
         {children}
         
         {/* Add some bottom padding to account for fixed navigation */}

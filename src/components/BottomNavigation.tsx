@@ -1,11 +1,13 @@
 import { Card, Button, Row, Col, Typography, Space, Avatar } from 'antd'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   SearchOutlined,
   UserOutlined,
   HomeOutlined,
   CreditCardOutlined,
   GlobalOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  ShoppingCartOutlined
 } from '@ant-design/icons'
 import { 
   Plane
@@ -13,19 +15,60 @@ import {
 const { Title, Text } = Typography
 
 interface BottomNavigationProps {
-  activeTab: string
-  onTabChange: (tab: string) => void
+  activeTab?: string
+  onTabChange?: (tab: string) => void
 }
 
 function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  
   const tabs = [
     { key: 'home', label: 'Home', icon: HomeOutlined, route: '/home' },
-    { key: 'destinations', label: 'Spots', icon: EnvironmentOutlined, route: '/destinations' },
+    { key: 'spots', label: 'Spots', icon: EnvironmentOutlined, route: '/spots' },
     { key: 'travel', label: 'Travel', icon: GlobalOutlined, route: '/travel' },
     { key: 'search', label: 'Search', icon: SearchOutlined, route: '/search' },
+    { key: 'cart', label: 'Cart', icon: ShoppingCartOutlined, route: '/cart' },
     { key: 'bookings', label: 'Orders', icon: CreditCardOutlined, route: '/bookings' },
     { key: 'profile', label: 'Profile', icon: UserOutlined, route: '/profile' }
   ]
+
+  // 根据当前路径确定活跃的标签
+  const getCurrentActiveTab = () => {
+    const currentPath = location.pathname
+    
+    // 如果传入了 activeTab，优先使用
+    if (activeTab) {
+      return activeTab
+    }
+    
+    // 根据路径匹配对应的标签
+    const matchedTab = tabs.find(tab => {
+      if (tab.route === currentPath) {
+        return true
+      }
+      // 对于动态路由，检查路径是否以该路由开头
+      if (tab.key === 'destinations' && currentPath.startsWith('/spot/')) {
+        return true
+      }
+      return false
+    })
+    
+    return matchedTab?.key || 'home'
+  }
+
+  const currentActiveTab = getCurrentActiveTab()
+
+  const handleTabClick = (tabKey: string) => {
+    const tab = tabs.find(t => t.key === tabKey)
+    if (tab) {
+      navigate(tab.route)
+    }
+    // 如果传入了 onTabChange 回调，也调用它
+    if (onTabChange) {
+      onTabChange(tabKey)
+    }
+  }
 
   return (
     <Card 
@@ -46,13 +89,14 @@ function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
           return (
             <Col key={tab.key}>
               <Button 
-                type={activeTab === tab.key ? 'primary' : 'text'}
-                onClick={() => onTabChange(tab.key)}
+                type={currentActiveTab === tab.key ? 'primary' : 'text'}
+                onClick={() => handleTabClick(tab.key)}
                 style={{ 
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   height: 'auto',
+                  minWidth: '80px',
                   padding: '8px 12px',
                   border: 'none',
                   boxShadow: 'none'

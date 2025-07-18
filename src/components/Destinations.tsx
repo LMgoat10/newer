@@ -115,19 +115,19 @@ const Destinations: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* 页面标题 */}
       <div className="bg-white shadow-sm p-6">
-        <div className="max-w-7xl mx-auto">
-          <Title level={2} style={{ margin: 0, color: '#1f2937' }}>
-            🌟 热门景点
+        <div className="max-w-6xl mx-auto">
+          <Title level={2} className="m-0 text-gray-800">
+            🔥 热门景点
           </Title>
-          <Text type="secondary" style={{ fontSize: '16px' }}>
+          <Text type="secondary" className="text-base">
             发现中国最美的旅游胜地
           </Text>
         </div>
       </div>
 
       {/* 搜索和筛选区域 */}
-      <div className="bg-white shadow-sm p-6 mb-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-white shadow-sm p-10 mb-20">
+        <div className="max-w-6xl mx-auto">
           <Row gutter={[16, 16]} align="middle">
             <Col xs={24} md={12} lg={8}>
               <Input.Search
@@ -191,7 +191,7 @@ const Destinations: React.FC = () => {
       </div>
 
       {/* 景点列表 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <div className="max-w-8xl mx-auto px-4 pb-8">
         {loading ? (
           <div className="text-center py-16">
             <Spin size="large" />
@@ -226,32 +226,17 @@ const Destinations: React.FC = () => {
                   <Card
                     hoverable
                     cover={
-                      <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
+                      <div className="relative h-48 overflow-hidden">
                         <img
                           alt={spot.name}
                           src={spot.picList[0] || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=200&fit=crop'}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            transition: 'transform 0.3s ease'
-                          }}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         />
                         
                         {/* 评分标签 */}
-                        <div style={{
-                          position: 'absolute',
-                          top: 12,
-                          left: 12,
-                          background: 'rgba(0,0,0,0.7)',
-                          borderRadius: '20px',
-                          padding: '6px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
+                        <div className="absolute top-3 left-3 bg-white bg-opacity-70 rounded-full px-3 py-1.5 flex items-center gap-1">
                           <Star size={14} fill="#ffd700" color="#ffd700" />
-                          <Text style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>
+                          <Text className="text-white text-xs font-bold">
                             {spot.rating}
                           </Text>
                         </div>
@@ -275,40 +260,29 @@ const Destinations: React.FC = () => {
                         </div>
                       </div>
                     }
-                    style={{
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      border: '1px solid #f0f0f0',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                    }}
+                    className="rounded-2xl overflow-hidden border border-gray-200 transition-all duration-300 shadow-sm hover:shadow-md"
                     bodyStyle={{ padding: '16px' }}
                     onClick={() => handleSpotClick(spot)}
                   >
-                    <div style={{ minHeight: '140px' }}>
+                    <div className="min-h-36">
                       {/* 景点名称 */}
-                      <Title level={5} style={{ margin: '0 0 8px 0', fontSize: '16px' }} ellipsis>
+                      <Title level={5} className="m-0 mb-2 text-base" ellipsis>
                         {spot.name}
                       </Title>
                       
                       {/* 景点描述 */}
-                      <Text type="secondary" style={{ fontSize: '12px', lineHeight: '1.4', display: 'block', marginBottom: '12px' }}>
+                      <Text type="secondary" className="text-xs leading-tight block mb-3">
                         {spot.summary.length > 60 ? spot.summary.substring(0, 60) + '...' : spot.summary}
                       </Text>
                       
                       {/* 标签 */}
-                      <div style={{ marginBottom: '12px' }}>
+                      <div className="mb-3">
                         <Space wrap size={4}>
                           {spot.tags.slice(0, 3).map((tag, index) => (
                             <Tag 
                               key={index} 
                               color="blue" 
-                              style={{ 
-                                fontSize: '10px', 
-                                padding: '2px 6px',
-                                margin: '0 2px 2px 0',
-                                borderRadius: '10px'
-                              }}
+                              className="text-xs px-1.5 py-0.5 m-0 mr-0.5 mb-0.5 rounded-lg"
                             >
                               {tag}
                             </Tag>
@@ -317,17 +291,17 @@ const Destinations: React.FC = () => {
                       </div>
 
                       {/* 开放时间 */}
-                      <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                        <Clock size={12} style={{ marginRight: '4px', color: '#666' }} />
-                        <Text type="secondary" style={{ fontSize: '11px' }}>
+                      <div className="mb-3 flex items-center">
+                        <Clock size={12} className="mr-1 text-gray-500" />
+                        <Text type="secondary" className="text-xs">
                           {spot.openTime}
                         </Text>
                       </div>
 
                       {/* 价格和评论 */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="flex justify-between items-center">
                         <div>
-                          <Text strong style={{ color: '#ff4d4f', fontSize: '18px' }}>
+                          <Text strong className="text-red-500 text-lg">
                             {spot.tickets.length > 0 ? (
                               spot.tickets.some(t => t.price === 0) ? (
                                 '免费'
@@ -339,14 +313,14 @@ const Destinations: React.FC = () => {
                             )}
                           </Text>
                           {spot.tickets.length > 0 && !spot.tickets.some(t => t.price === 0) && (
-                            <Text type="secondary" style={{ fontSize: '12px', marginLeft: 2 }}>
+                            <Text type="secondary" className="text-xs ml-0.5">
                               起
                             </Text>
                           )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <Users size={12} style={{ marginRight: '4px', color: '#666' }} />
-                          <Text type="secondary" style={{ fontSize: '11px' }}>
+                        <div className="flex items-center">
+                          <Users size={12} className="mr-1 text-gray-500" />
+                          <Text type="secondary" className="text-xs">
                             {spot.reviewCount} 评论
                           </Text>
                         </div>
@@ -367,7 +341,7 @@ const Destinations: React.FC = () => {
                 showSizeChanger={false}
                 showQuickJumper
                 showTotal={(total, range) => `第 ${range[0]}-${range[1]} 项，共 ${total} 项`}
-                style={{ marginBottom: '24px' }}
+                className="mb-6"
               />
             </div>
           </>
