@@ -1,10 +1,8 @@
 import { Card, Button, Row, Col, Typography, Space, Avatar } from 'antd'
 import {
-  SearchOutlined,
   UserOutlined,
   HomeOutlined,
   CreditCardOutlined,
-  GlobalOutlined,
   EnvironmentOutlined
 } from '@ant-design/icons'
 import { 
@@ -21,8 +19,6 @@ function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
   const tabs = [
     { key: 'home', label: 'Home', icon: HomeOutlined, route: '/home' },
     { key: 'destinations', label: 'Spots', icon: EnvironmentOutlined, route: '/destinations' },
-    { key: 'travel', label: 'Travel', icon: GlobalOutlined, route: '/travel' },
-    { key: 'search', label: 'Search', icon: SearchOutlined, route: '/search' },
     { key: 'bookings', label: 'Orders', icon: CreditCardOutlined, route: '/bookings' },
     { key: 'profile', label: 'Profile', icon: UserOutlined, route: '/profile' }
   ]

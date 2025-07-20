@@ -9,15 +9,12 @@ import AdminRoutes from './AdminRoutes'
 import { useAuth } from '../hooks/useAuth'
 import { 
   HomePage, 
-  SearchPage, 
-  SearchResultsPage, 
   BookingsPage, 
   WalletPage, 
   ProfilePage,
   LoginPage,
   RegisterPage,
   DestinationDetailPage,
-  TravelHomepage,
   BookingPage
 } from '../pages'
 
@@ -67,18 +64,6 @@ const Router = () => {
                 <Route 
                 path="/home" 
                 element={<HomePage onNavigate={handleNavigate} />} 
-                />
-                <Route 
-                path="/travel" 
-                element={<TravelHomepage onNavigate={handleNavigate} />} 
-                />
-                <Route 
-                path="/search" 
-                element={<SearchPage onNavigate={handleNavigate} />} 
-                />
-                <Route 
-                path="/search-results" 
-                element={<SearchResultsPage onNavigate={handleNavigate} />} 
                 />
                 <Route 
                 path="/destinations" 

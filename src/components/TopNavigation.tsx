@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ShoppingCart, Search, User, Bell } from 'lucide-react'
+import { ShoppingCart, User, Bell } from 'lucide-react'
 import { cartService } from '../services/cartService'
 import { useAuth } from '../hooks/useAuth'
 import WalletBalanceButton from './WalletBalanceButton'
@@ -47,10 +47,6 @@ const TopNavigation: React.FC = () => {
     }
   }
 
-  const handleSearchClick = () => {
-    navigate('/search')
-  }
-
   const handleProfileClick = () => {
     if (user) {
       navigate('/profile')
@@ -62,13 +58,11 @@ const TopNavigation: React.FC = () => {
   const getPageTitle = () => {
     const path = location.pathname
     if (path === '/' || path === '/home') return 'TripApp'
-    if (path === '/search') return '搜索'
     if (path === '/destinations') return '景点'
     if (path === '/bookings') return '我的订单'
     if (path === '/wallet') return '我的钱包'
     if (path === '/profile') return '个人中心'
     if (path === '/cart') return '购物车'
-    if (path === '/travel') return '旅行'
     if (path.startsWith('/spot/')) return '景点详情'
     return 'TripApp'
   }
@@ -100,14 +94,6 @@ const TopNavigation: React.FC = () => {
                 size="small"
               />
             )}
-
-            {/* 搜索按钮 */}
-            <button
-              onClick={handleSearchClick}
-              className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              <Search className="w-5 h-5" />
-            </button>
 
             {/* 通知按钮 */}
             <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">

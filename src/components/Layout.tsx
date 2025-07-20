@@ -16,16 +16,14 @@ function Layout({ children }: LayoutProps) {
     const path = location.pathname
     if (path === '/' || path === '/home') {
       setActiveTab('home')
-    } else if (path === '/search') {
-      setActiveTab('search')
+    } else if (path === '/destinations') {
+      setActiveTab('destinations')
     } else if (path === '/bookings') {
       setActiveTab('bookings')
     } else if (path === '/wallet') {
       setActiveTab('wallet')
     } else if (path === '/profile') {
       setActiveTab('profile')
-    } else if (path === '/travel') {
-      setActiveTab('travel')
     }
   }, [location.pathname])
 
