@@ -455,8 +455,18 @@ const UserManagement: React.FC = () => {
                 name="phone"
                 label="手机号"
                 rules={[
-                  { required: true, message: '请输入手机号' },
-                  { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }
+                  { 
+                    validator: (_, value) => {
+                      if (!value || value.trim() === '') {
+                        return Promise.resolve() // 允许空值
+                      }
+                      // 允许11位数字的手机号
+                      if (/^\d{11}$/.test(value)) {
+                        return Promise.resolve()
+                      }
+                      return Promise.reject('请输入正确的手机号格式（11位数字）')
+                    }
+                  }
                 ]}
               >
                 <Input placeholder="请输入手机号" />
