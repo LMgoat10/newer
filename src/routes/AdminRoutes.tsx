@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import AdminLayout from '../components/AdminLayout'
 import AdminProtectedRoute from '../components/AdminProtectedRoute'
 
-import { AdminDashboard, UserManagement, OrderManagement } from '../pages/admin'
+import { AdminDashboard, UserManagement, OrderManagement, AttractionManagement } from '../pages/admin'
 import RefundManagement from '../pages/admin/RefundManagement'
 
 

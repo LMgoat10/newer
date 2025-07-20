@@ -7,7 +7,6 @@ import {
   Form, 
   Input, 
   InputNumber, 
-  message, 
   Popconfirm, 
   Tag, 
   Image,
@@ -15,7 +14,8 @@ import {
   Row,
   Col,
   Card,
-  Upload
+  Upload,
+  App
 } from 'antd'
 import { 
   PlusOutlined, 
@@ -25,8 +25,7 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface'
-import { adminAttractionService } from '../../services/attractionService'
-import type { Attraction as AttractionType } from '../../services/attractionService'
+import { adminAttractionService } from '../../services/attractionService.ts'
 
 const { TextArea } = Input
 const { Option } = Select
@@ -63,6 +62,7 @@ interface AttractionForm {
 }
 
 const AttractionManagement: React.FC = () => {
+  const { message } = App.useApp()
   const [attractions, setAttractions] = useState<Attraction[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -75,22 +75,25 @@ const AttractionManagement: React.FC = () => {
     setLoading(true)
     try {
       const result = await adminAttractionService.getAdminAttractionList(1, 100)
+      console.log('API返回结果:', result)
+      
       // 转换服务返回的数据格式为本地的Attraction格式
-      const convertedAttractions: Attraction[] = result.attractions.map(item => ({
+      const apiAttractions = result.data || []
+      const convertedAttractions: Attraction[] = apiAttractions.map((item: any) => ({
         id: item.id,
         name: item.name,
-        location: item.location,
-        category: '景点', // 默认分类
-        rating: item.rating,
-        description: item.description,
-        price: item.ticketPrice,
-        picList: [item.imageUrl].filter(Boolean), // 转换为数组格式
-        tags: [item.city, item.province].filter(Boolean), // 使用城市和省份作为标签
-        timing: '08:30-17:00', // 默认营业时间
-        contactInfo: '', // 默认联系方式
-        transportation: '', // 默认交通信息
-        createdAt: item.createTime,
-        updatedAt: item.updateTime
+        location: item.address || '', // 使用address字段作为位置显示
+        category: item.category || '景点', 
+        rating: item.rating || 4.5,
+        description: item.description || '',
+        price: item.price || 0,
+        picList: item.picList || [], 
+        tags: item.tags || [],
+        timing: item.timing || item.openTime || '08:30-17:00',
+        contactInfo: item.contactInfo || item.phone || '',
+        transportation: item.transportation || '',
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString()
       }))
       console.log('转换后的景点数据:', convertedAttractions)
       setAttractions(convertedAttractions)
@@ -98,6 +101,8 @@ const AttractionManagement: React.FC = () => {
     } catch (error) {
       console.error('获取景点列表失败:', error)
       message.error('获取景点列表失败')
+      // 设置空数组避免map错误
+      setAttractions([])
     } finally {
       setLoading(false)
     }
@@ -248,7 +253,7 @@ const AttractionManagement: React.FC = () => {
       title: '位置',
       dataIndex: 'location',
       key: 'location',
-      width: 120,
+      width: 200,
       ellipsis: true
     },
     {
@@ -269,7 +274,7 @@ const AttractionManagement: React.FC = () => {
       dataIndex: 'price',
       key: 'price',
       width: 100,
-      render: (price) => `¥${price}`
+      render: (price) => price === 0 ? '免费' : `¥${price}`
     },
     {
       title: '图片',
