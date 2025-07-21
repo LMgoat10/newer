@@ -1,3 +1,4 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 import React, { useState, useEffect } from 'react'
 import { 
   Table, 
@@ -74,12 +75,12 @@ const AttractionManagement: React.FC = () => {
   const loadAttractions = async () => {
     setLoading(true)
     try {
-      const result = await adminAttractionService.getAdminAttractionList(1, 100)
+      const result = await adminAttractionService.getAdminAttractionList(1, 10)
       console.log('API返回结果:', result)
       
       // 转换服务返回的数据格式为本地的Attraction格式
       const apiAttractions = result.data || []
-      const convertedAttractions: Attraction[] = apiAttractions.map((item: any) => ({
+      const convertedAttractions: Attraction[] = apiAttractions.map((item) => ({
         id: item.id,
         name: item.name,
         location: item.address || '', // 使用address字段作为位置显示
@@ -217,12 +218,13 @@ const AttractionManagement: React.FC = () => {
 
   // 上传配置
   const uploadProps: UploadProps = {
+    name:'cover',
     fileList,
     multiple: true,
     listType: 'picture-card',
-    action: '/api/upload/image', // 假设有上传接口
+    action: `${API_BASE_URL}/api/admin/attractions/upload/attractionsCover`, // 假设有上传接口
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`
     },
     onChange: ({ fileList: newFileList }) => {
       setFileList(newFileList)

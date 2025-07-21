@@ -21,6 +21,7 @@ import {
 import AdminRoutes from './AdminRoutes'
 import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import Layout from '../components/Layout'
 
 const Router = () => {
     const navigate = useNavigate()
@@ -61,6 +62,7 @@ const Router = () => {
     }
 
     return (
+      <Layout>
         <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route 
@@ -160,6 +162,7 @@ const Router = () => {
             } 
             />
         </Routes>
+      </Layout>
     )
 }
 

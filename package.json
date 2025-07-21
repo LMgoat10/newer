@@ -17,6 +17,8 @@
     "@types/react-router-dom": "^5.3.3",
     "antd": "^5.26.4",
     "autoprefixer": "^10.4.21",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.2",
     "lucide-react": "^0.525.0",
     "postcss": "^8.5.6",
     "react": "^19.1.0",

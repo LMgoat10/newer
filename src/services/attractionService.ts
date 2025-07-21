@@ -1,3 +1,4 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 // 管理员景点服务
 export interface Attraction {
   id: number
@@ -55,9 +56,8 @@ export interface CreateAttractionRequest {
 export interface UpdateAttractionRequest extends CreateAttractionRequest {
   id: number
 }
-
 class AdminAttractionService {
-  private baseUrl = '/api/admin/attractions'
+  private path = '/api/admin/attractions'
 
   // 获取管理员景点列表
   async getAdminAttractionList(page: number = 1, pageSize: number = 10, keyword?: string): Promise<AttractionListResponse> {
@@ -72,8 +72,9 @@ class AdminAttractionService {
         size: pageSize.toString(), // 后端使用 size 而不是 pageSize
         ...(keyword && { keyword })
       })
+      console.log("请求参数:", `${API_BASE_URL}${this.path}?${params}`)
 
-      const response = await fetch(`${this.baseUrl}?${params}`, {
+      const response = await fetch(`${API_BASE_URL}${this.path}?${params}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -89,16 +90,17 @@ class AdminAttractionService {
       }
 
       const result = await response.json()
+      console.log("result:",result)
       if (result.status !== 200) {
         throw new Error(result.message || '获取景点列表失败')
       }
       
       // 转换后端响应格式为前端期望的格式
       return {
-        data: result.data.data || [], // 后端返回 result.data.data
-        total: result.data.total || 0,
-        page: result.data.page || page,
-        pageSize: result.data.pageSize || pageSize
+        data: result.data.data,
+        total: result.data.total,
+        page: result.data.page,
+        pageSize: result.data.pageSize
       }
     } catch (error) {
       console.error('获取景点列表失败:', error)
@@ -115,7 +117,7 @@ class AdminAttractionService {
         throw new Error('未找到管理员令牌')
       }
 
-      const response = await fetch(this.baseUrl, {
+      const response = await fetch(`${API_BASE_URL}${this.path}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -180,7 +182,7 @@ class AdminAttractionService {
         throw new Error('未找到管理员令牌')
       }
 
-      const response = await fetch(`${this.baseUrl}/${id}`, {
+      const response = await fetch(`${API_BASE_URL}${this.path}/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -245,7 +247,7 @@ class AdminAttractionService {
         throw new Error('未找到管理员令牌')
       }
 
-      const response = await fetch(`${this.baseUrl}/${id}`, {
+      const response = await fetch(`${API_BASE_URL}${this.path}/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -279,7 +281,7 @@ class AdminAttractionService {
         throw new Error('未找到管理员令牌')
       }
 
-      const response = await fetch(`${this.baseUrl}/batch`, {
+      const response = await fetch(`${API_BASE_URL}${this.path}/batch`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
