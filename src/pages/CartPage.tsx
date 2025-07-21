@@ -39,7 +39,7 @@ import type { CartItem, CartSummary } from '../services/cartService'
 const { Title, Text } = Typography
 const { confirm } = Modal
 
-const Cart: React.FC = () => {
+const CartPage: React.FC = () => {
   const navigate = useNavigate()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [cartSummary, setCartSummary] = useState<CartSummary>({
@@ -48,26 +48,42 @@ const Cart: React.FC = () => {
     totalSavings: 0
   })
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     loadCartData()
   }, [])
 
-  const loadCartData = () => {
-    const items = cartService.getCartItems()
-    const summary = cartService.getCartSummary()
-    setCartItems(items)
-    setCartSummary(summary)
-    
-    // 默认选中所有商品
-    setSelectedItems(new Set(items.map(item => item.id)))
+  const loadCartData = async () => {
+    try {
+      const cartData = await cartService.getCartData()
+      if (cartData) {
+        setCartItems(cartData.items)
+        setCartSummary(cartData.summary)
+        // 默认选中所有商品
+        setSelectedItems(new Set(cartData.items.map(item => item.id)))
+      } else {
+        setCartItems([])
+        setCartSummary({ totalItems: 0, totalPrice: 0, totalSavings: 0 })
+        setSelectedItems(new Set())
+      }
+    } catch (error) {
+      console.error('加载购物车数据失败:', error)
+      message.error('加载购物车数据失败')
+    }
   }
 
-  const handleQuantityChange = (itemId: string, newQuantity: number) => {
-    const success = cartService.updateCartItem(itemId, newQuantity)
-    if (success) {
-      loadCartData()
+  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
+    try {
+      const success = await cartService.updateCartItem(itemId, newQuantity)
+      if (success) {
+        await loadCartData()
+        message.success('数量已更新')
+      } else {
+        message.error('更新失败')
+      }
+    } catch (error) {
+      console.error('更新数量失败:', error)
+      message.error('更新失败')
     }
   }
 
@@ -76,17 +92,20 @@ const Cart: React.FC = () => {
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,
       content: '确定要删除这个商品吗？',
-      onOk() {
-        const success = cartService.removeFromCart(itemId)
-        if (success) {
-          message.success('商品已删除')
-          loadCartData()
-          // 从选中列表中移除
-          const newSelected = new Set(selectedItems)
-          newSelected.delete(itemId)
-          setSelectedItems(newSelected)
+      async onOk() {
+        try {
+          const success = await cartService.removeFromCart(itemId)
+          if (success) {
+            await loadCartData()
+            message.success('商品已删除')
+          } else {
+            message.error('删除失败')
+          }
+        } catch (error) {
+          console.error('删除商品失败:', error)
+          message.error('删除失败')
         }
-      },
+      }
     })
   }
 
@@ -113,35 +132,39 @@ const Cart: React.FC = () => {
       title: '清空购物车',
       icon: <ExclamationCircleOutlined />,
       content: '确定要清空购物车吗？此操作不可撤销。',
-      onOk() {
-        const success = cartService.clearCart()
-        if (success) {
-          message.success('购物车已清空')
-          loadCartData()
-          setSelectedItems(new Set())
+      async onOk() {
+        try {
+          const success = await cartService.clearCart()
+          if (success) {
+            message.success('购物车已清空')
+            await loadCartData()
+            setSelectedItems(new Set())
+          } else {
+            message.error('清空失败')
+          }
+        } catch (error) {
+          console.error('清空购物车失败:', error)
+          message.error('清空失败')
         }
       },
     })
   }
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (selectedItems.size === 0) {
       message.warning('请选择要购买的商品')
       return
     }
 
-    setIsLoading(true)
-    // 模拟结算过程
-    setTimeout(() => {
-      setIsLoading(false)
-      message.success('订单提交成功！感谢您的购买')
-      
-      // 移除已购买的商品
-      const selectedItemIds = Array.from(selectedItems)
-      cartService.removeBatch(selectedItemIds)
-      loadCartData()
-      setSelectedItems(new Set())
-    }, 2000)
+    // 获取选中的商品数据
+    const selectedItemsList = cartItems.filter(item => selectedItems.has(item.id))
+    
+    // 跳转到订单确认页面，传递选中的商品
+    navigate('/order-confirm', {
+      state: {
+        selectedItems: selectedItemsList
+      }
+    })
   }
 
   const getSelectedSummary = () => {
@@ -412,7 +435,7 @@ const Cart: React.FC = () => {
                               有效期: {item.validDays}天
                             </Tag>
                             <Tag icon={<EnvironmentOutlined />} color="green">
-                              {item.addedAt.toLocaleDateString()}
+                              {cartService.parseCartItemDate(item.addedAt).toLocaleDateString()}
                             </Tag>
                           </Space>
                           
@@ -473,7 +496,6 @@ const Cart: React.FC = () => {
                   type="primary"
                   size="large"
                   block
-                  loading={isLoading}
                   disabled={selectedItems.size === 0}
                   onClick={handleCheckout}
                   style={{
@@ -483,7 +505,7 @@ const Cart: React.FC = () => {
                     fontWeight: 'bold'
                   }}
                 >
-                  {isLoading ? '处理中...' : `结算 (${selectedSummary.totalItems})`}
+                  立即结算 ({selectedSummary.totalItems})
                 </Button>
 
                 {selectedItems.size === 0 && (
@@ -524,4 +546,4 @@ const Cart: React.FC = () => {
   )
 }
 
-export default Cart
+export default CartPage

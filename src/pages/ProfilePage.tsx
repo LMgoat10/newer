@@ -15,7 +15,8 @@ import {
   Form,
   Modal,
   Input,
-  message
+  message,
+  Spin
 } from 'antd'
 import { 
   ArrowLeftOutlined,
@@ -39,12 +40,14 @@ import {
   EyeTwoTone,
   EyeInvisibleOutlined,
   MailOutlined,
-  PhoneOutlined
+  PhoneOutlined,
+  IdcardOutlined,
+  EnvironmentOutlined
 } from '@ant-design/icons'
-import { mockUserProfile, mockUserStats, memberLevels } from '../data/userData'
+import { mockUserProfile, memberLevels } from '../data/userData'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AuthService from '../services/authService'
 
 const { Title, Text } = Typography
@@ -60,66 +63,76 @@ interface UpdateValues {
   phone?: string;
   password?: string;
   confirmPassword?: string;
+  idCard?: string;
+  address?: string;
 }
 
 // Mock 菜单项
 const mockMenuItems = [
   {
     key: 'personal-info',
-    title: 'Personal Information',
+    title: '个人信息',
     icon: <UserOutlined />,
-    description: 'Manage your personal details',
+    description: '管理您的个人资料',
     showArrow: true
   },
   {
     key: 'payment',
-    title: 'Payment Methods',
+    title: '支付方式',
     icon: <CreditCardOutlined />,
-    description: '2 cards saved',
+    description: '已保存 2 张卡片',
     showArrow: true
   },
   {
     key: 'booking-history',
-    title: 'Booking History',
+    title: '订票记录',
     icon: <HistoryOutlined />,
-    description: 'View past bookings',
+    description: '查看历史订票',
     showArrow: true,
     badge: '3'
   },
   {
+    key: 'favorite-spots',
+    title: '收藏景点',
+    icon: <StarFilled />,
+    description: '我的心愿清单',
+    showArrow: true,
+    badge: '5'
+  },
+  {
+    key: 'travel-preferences',
+    title: '旅行偏好',
+    icon: <GlobalOutlined />,
+    description: '设置旅行喜好',
+    showArrow: true
+  },
+  {
     key: 'notifications',
-    title: 'Notifications',
+    title: '消息通知',
     icon: <BellOutlined />,
-    description: 'Manage your notifications',
+    description: '管理通知设置',
     action: <Switch defaultChecked={mockUserProfile.preferences.notifications.push} size="small" />
   },
   {
     key: 'security',
-    title: 'Security & Privacy',
+    title: '安全与隐私',
     icon: <SecurityScanOutlined />,
-    description: 'Password and privacy settings',
-    showArrow: true
-  },
-  {
-    key: 'language',
-    title: 'Language & Region',
-    icon: <GlobalOutlined />,
-    description: mockUserProfile.preferences.language,
+    description: '密码和隐私设置',
     showArrow: true
   },
   {
     key: 'rewards',
-    title: 'Rewards & Offers',
+    title: '会员权益',
     icon: <GiftOutlined />,
-    description: 'Special deals and rewards',
+    description: '专属优惠和积分',
     showArrow: true,
     badge: '2'
   },
   {
     key: 'help',
-    title: 'Help & Support',
+    title: '帮助与支持',
     icon: <QuestionCircleOutlined />,
-    description: '24/7 customer support',
+    description: '24/7 客户服务',
     showArrow: true
   }
 ]
@@ -142,9 +155,42 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
   const { logout, user } = useAuth()
   const navigate = useNavigate()
   const [form] = Form.useForm();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarLoading, setAvatarLoading] = useState(false)
+  
   // 使用真实用户数据或 fallback 到 mock 数据
   const userProfile = user!
+  
+  // 加载用户头像
+  useEffect(() => {
+    const loadUserAvatar = async () => {
+      if (userProfile.avatarFileName) {
+        setAvatarLoading(true)
+        try {
+          const avatarBlobUrl = await AuthService.getUserAvatar(userProfile.avatarFileName)
+          setAvatarUrl(avatarBlobUrl)
+        } catch (error) {
+          console.error('加载头像失败:', error)
+          // 如果加载失败，设置为 null
+          setAvatarUrl(null)
+        } finally {
+          setAvatarLoading(false)
+        }
+      }
+    }
+
+    loadUserAvatar()
+  }, [userProfile.avatarFileName])
+
+  // 清理 blob URL
+  useEffect(() => {
+    return () => {
+      if (avatarUrl && avatarUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarUrl)
+      }
+    }
+  }, [avatarUrl])
   
   const { percent, nextLevel, pointsNeeded } = getNextLevelProgress(
     userProfile.memberLevel, 
@@ -161,6 +207,14 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
         break
       case 'booking-history':
         onNavigate('/bookings')
+        break
+      case 'favorite-spots':
+        // 导航到收藏景点页面
+        console.log('Navigate to favorite spots')
+        break
+      case 'travel-preferences':
+        // 导航到旅行偏好设置页面
+        console.log('Navigate to travel preferences')
         break
       default:
         console.log(`Navigate to ${key}`)
@@ -279,6 +333,34 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
           />
         </Form.Item>
 
+        <span style={{paddingLeft: '12px', fontWeight: 'bold' }}>身份证号</span>
+        <Form.Item
+          name="idCard"
+          rules={[
+            { 
+              pattern: /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/,
+              message: '请输入有效的身份证号码'
+            }
+          ]}
+        >
+          <Input
+            prefix={<IdcardOutlined style={{ color: '#bfbfbf' }} />}
+            placeholder="身份证号码（用于实名认证）"
+            style={{ borderRadius: '12px', height: '48px' }}
+          />
+        </Form.Item>
+
+        <span style={{paddingLeft: '12px', fontWeight: 'bold' }}>常住地址</span>
+        <Form.Item
+          name="address"
+        >
+          <Input
+            prefix={<EnvironmentOutlined style={{ color: '#bfbfbf' }} />}
+            placeholder="常住地址"
+            style={{ borderRadius: '12px', height: '48px' }}
+          />
+        </Form.Item>
+
         <span style={{paddingLeft: '12px', fontWeight: 'bold' }}>Password</span>
         <Form.Item
           name="password"
@@ -337,7 +419,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
               size="large"
             />
             <Title level={4} style={{ margin: 0, color: '#1f2937' }}>
-              Profile
+              个人中心
             </Title>
           </Space>
           <Button 
@@ -357,12 +439,29 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
               status="success" 
               offset={[-8, 8]}
             >
-              <Avatar 
-                size={80} 
-                src={userProfile.avatar}
-                icon={<UserOutlined />}
-                className="mb-4"
-              />
+              {avatarLoading ? (
+                <div 
+                  style={{ 
+                    width: 80, 
+                    height: 80, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    backgroundColor: '#f5f5f5',
+                    marginBottom: '16px'
+                  }}
+                >
+                  <Spin />
+                </div>
+              ) : (
+                <Avatar 
+                  size={80} 
+                  src={avatarUrl || undefined}
+                  icon={<UserOutlined />}
+                  className="mb-4"
+                />
+              )}
             </Badge>
             
             <div className="mb-2">
@@ -391,7 +490,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
             </Tag>
             
             <Text type="secondary" className="block mb-4">
-              Member since {new Date(userProfile.createdAt || Date.now()).toLocaleDateString('en-US', { 
+              Member since {new Date(userProfile.joinDate || Date.now()).toLocaleDateString('zh-CN', { 
                 year: 'numeric', 
                 month: 'long' 
               })}
@@ -420,12 +519,12 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
             <Row gutter={16} className="mt-4">
               <Col span={6}>
                 <div className="text-center">
-                  <div className="text-2xl mb-1">✈️</div>
+                  <div className="text-2xl mb-1">🔖</div>
                   <div className="font-semibold text-lg text-gray-800">
-                    {mockUserStats.totalTrips}
+                    {userProfile.totalOrders}
                   </div>
                   <Text type="secondary" className="text-xs">
-                    Trips
+                    订单
                   </Text>
                 </div>
               </Col>
@@ -433,10 +532,10 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="text-center">
                   <div className="text-2xl mb-1">🌍</div>
                   <div className="font-semibold text-lg text-gray-800">
-                    {mockUserStats.countriesVisited}
+                    {userProfile.totalOrders}
                   </div>
                   <Text type="secondary" className="text-xs">
-                    Countries
+                    景点
                   </Text>
                 </div>
               </Col>
@@ -444,21 +543,21 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="text-center">
                   <div className="text-2xl mb-1">⭐</div>
                   <div className="font-semibold text-lg text-gray-800">
-                    {(mockUserStats.totalPoints / 1000).toFixed(1)}K
+                    {(userProfile.memberPoints / 1000).toFixed(1)}K
                   </div>
                   <Text type="secondary" className="text-xs">
-                    Points
+                    积分
                   </Text>
                 </div>
               </Col>
               <Col span={6}>
                 <div className="text-center">
-                  <div className="text-2xl mb-1">📝</div>
+                  <div className="text-2xl mb-1">💰</div>
                   <div className="font-semibold text-lg text-gray-800">
-                    {mockUserStats.reviewsWritten}
+                    {userProfile.balance}
                   </div>
                   <Text type="secondary" className="text-xs">
-                    Reviews
+                    余额
                   </Text>
                 </div>
               </Col>
@@ -474,7 +573,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
                   style={{ borderRadius: '12px', height: '40px' }}
                   onClick={() => handleMenuClick('personal-info')}
                 >
-                  Edit Profile
+                  编辑资料
                 </Button>
               </Col>
               <Col span={12}>
@@ -484,7 +583,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
                   style={{ borderRadius: '12px', height: '40px' }}
                   onClick={handleShareProfile}
                 >
-                  Share
+                  分享
                 </Button>
               </Col>
             </Row>
@@ -575,9 +674,9 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
       <div className="px-4 pb-4">
         <Card className="rounded-2xl shadow-sm border-0">
           <div className="flex items-center justify-between mb-4">
-            <Title level={5} style={{ margin: 0 }}>Recent Activity</Title>
+            <Title level={5} style={{ margin: 0 }}>最近活动</Title>
             <Button type="text" size="small" style={{ color: '#1890ff' }}>
-              View All
+              查看全部
             </Button>
           </div>
           
@@ -585,29 +684,43 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Text style={{ fontSize: '14px' }}>✈️</Text>
+                  <Text style={{ fontSize: '14px' }}>🎫</Text>
                 </div>
                 <div>
-                  <Text strong className="text-sm">Flight to Bali</Text>
+                  <Text strong className="text-sm">购买故宫门票</Text>
                   <br />
-                  <Text type="secondary" className="text-xs">Jan 15, 2024</Text>
+                  <Text type="secondary" className="text-xs">2024年1月15日</Text>
                 </div>
               </div>
-              <Text strong style={{ color: '#52c41a' }}>+450 pts</Text>
+              <Text strong style={{ color: '#52c41a' }}>+150 积分</Text>
             </div>
             
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Text style={{ fontSize: '14px' }}>🏨</Text>
+                  <Text style={{ fontSize: '14px' }}>�️</Text>
                 </div>
                 <div>
-                  <Text strong className="text-sm">Hotel Booking</Text>
+                  <Text strong className="text-sm">预订黄山门票</Text>
                   <br />
-                  <Text type="secondary" className="text-xs">Jan 10, 2024</Text>
+                  <Text type="secondary" className="text-xs">2024年1月10日</Text>
                 </div>
               </div>
-              <Text strong style={{ color: '#52c41a' }}>+120 pts</Text>
+              <Text strong style={{ color: '#52c41a' }}>+280 积分</Text>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Text style={{ fontSize: '14px' }}>⭐</Text>
+                </div>
+                <div>
+                  <Text strong className="text-sm">发表景点评价</Text>
+                  <br />
+                  <Text type="secondary" className="text-xs">2024年1月8日</Text>
+                </div>
+              </div>
+              <Text strong style={{ color: '#52c41a' }}>+50 积分</Text>
             </div>
           </Space>
         </Card>
@@ -623,7 +736,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
           className="w-full h-12 rounded-2xl font-medium"
           onClick={handleLogout}
         >
-          Logout
+          退出登录
         </Button>
       </div>
     </div>
