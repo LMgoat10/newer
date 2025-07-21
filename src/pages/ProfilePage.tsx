@@ -15,7 +15,9 @@ import {
   Modal,
   Input,
   message,
-  Spin
+  Spin,
+  Upload,
+  type UploadProps
 } from 'antd'
 import { 
   ArrowLeftOutlined,
@@ -40,7 +42,8 @@ import {
   MailOutlined,
   PhoneOutlined,
   IdcardOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  UploadOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
@@ -61,6 +64,7 @@ interface UpdateValues {
   password?: string;
   confirmPassword?: string;
   idCard?: string;
+  avatarFileName?: string;
   address?: string;
 }
 
@@ -188,16 +192,11 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
       }
     }
   }, [avatarUrl])
-  
-  // const { percent, nextLevel, pointsNeeded } = getNextLevelProgress(
-  //   userProfile.memberLevel, 
-  //   userProfile.memberPoints || 0
-  // )
 
   const handleMenuClick = (key: string) => {
     switch (key) {
-      case 'personal-info':      
-        setOpen(true)         
+      case 'personal-info':
+        openEditModal()
         break
       case 'payment':
         onNavigate('/wallet')
@@ -239,6 +238,27 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
   const handleShareProfile = () => {
     console.log('Share profile')
     // 这里可以添加分享逻辑
+  }
+
+  const openEditModal = () => {
+    // 设置表单初始值并打开Modal
+    form.setFieldsValue({
+      name: userProfile.name,
+      email: userProfile.email,
+      phone: userProfile.phone,
+      idCard: userProfile.idCard || '',
+      address: userProfile.address || ''
+    })
+    setOpen(true)
+  }
+
+  const onAvatarChange: UploadProps['onChange']  = (info) => {
+    if (info.file.status === 'done') {
+      message.success('Avatar uploaded successfully');
+      AuthService.update({ avatarFileName: info.file.response.fileName })
+    } else if (info.file.status === 'error') {
+      message.error('Failed to upload avatar');
+    }
   }
 
   const onFinishUpdate = async (values: UpdateValues) => {
@@ -288,7 +308,6 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
           ]}
         >
           <Input
-            defaultValue={userProfile.name}
             prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
             placeholder="Full Name"
             style={{ borderRadius: '12px', height: '48px' }}
@@ -299,12 +318,11 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
         <Form.Item
           name="email"
           rules={[
-            { required: true, message: 'Please enter your email' },
+            { required: false, message: 'Please enter your email' },
             { type: 'email', message: 'Please enter a valid email' }
           ]}
         >
           <Input
-            defaultValue={userProfile.email}
             prefix={<MailOutlined style={{ color: '#bfbfbf' }} />}
             placeholder="Email Address"
             style={{ borderRadius: '12px', height: '48px' }}
@@ -315,7 +333,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
         <Form.Item
           name="phone"
           rules={[
-            { required: true, message: 'Please enter your phone number' },
+            { required: false, message: 'Please enter your phone number' },
             { 
               pattern: /^(\+\d{1,8}[- ]?)?\d{11}$/,
               message: 'Please enter a valid phone number'
@@ -323,7 +341,6 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
           ]}
         >
           <Input
-            defaultValue={userProfile.phone}
             prefix={<PhoneOutlined style={{ color: '#bfbfbf' }} />}
             placeholder="Phone Number"
             style={{ borderRadius: '12px', height: '48px' }}
@@ -452,12 +469,23 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
                   <Spin />
                 </div>
               ) : (
-                <Avatar 
-                  size={80} 
-                  src={avatarUrl || undefined}
-                  icon={<UserOutlined />}
-                  className="mb-4"
-                />
+                <div>
+                  <Avatar 
+                    size={80} 
+                    src={avatarUrl || undefined}
+                    icon={<UserOutlined />}
+                    className="mb-4"
+                  />
+                  <Upload
+                    className='absolute bottom-0 right-0'
+                    action={`${window.baseURL}/api/upload/avatar`}
+                    onChange={onAvatarChange}
+                    showUploadList={false}
+                    name='avatar'
+                  >
+                    <Button icon={<UploadOutlined />} shape='circle'></Button>
+                  </Upload>
+                </div>
               )}
             </Badge>
             

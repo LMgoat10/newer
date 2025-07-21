@@ -8,7 +8,7 @@ function App() {
     <ConfigProvider>
       <AntdApp>
         <BrowserRouter>
-            <Router />
+          <Router />
         </BrowserRouter>
       </AntdApp>
     </ConfigProvider>

@@ -1,6 +1,5 @@
 // API基础配置
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-console.log('AdminOrderService API_BASE_URL:', API_BASE_URL)
 
 // 订单状态常量
 export const OrderStatus = {

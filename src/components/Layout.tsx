@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Layout as Layoutantd } from 'antd'
-import BottomNavigation from './BottomNavigation'
+import TopNavigation from './TopNavigation'
 interface LayoutProps {
   children: React.ReactNode
 }
@@ -37,7 +37,7 @@ function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 rounded-xl">
       {/* Top Navigation */}
-      <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <TopNavigation activeTab={activeTab} onTabChange={handleTabChange} />
 
       <Layoutantd className="min-h-screen bg-gray-50" style={{paddingLeft: '8px', paddingRight: '8px' }}>
         {children}

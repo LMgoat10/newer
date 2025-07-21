@@ -1,134 +1,113 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { ShoppingCart, Search, User, Bell } from 'lucide-react'
-import { cartService } from '../services/cartService'
-import { useAuth } from '../hooks/useAuth'
+import { Card, Button, Row, Col, Typography, Space, Avatar } from 'antd'
+import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  UserOutlined,
+  HomeOutlined,
+  CreditCardOutlined,
+  EnvironmentOutlined,
+  ShoppingCartOutlined,
+  WalletOutlined
+} from '@ant-design/icons'
+import { 
+  Plane
+} from 'lucide-react'
+const { Title, Text } = Typography
 
-const TopNavigation: React.FC = () => {
-  const navigate = useNavigate()
+interface TopNavigationProps {
+  activeTab?: string
+  onTabChange?: (tab: string) => void
+}
+
+function TopNavigation({ activeTab, onTabChange }: TopNavigationProps) {
   const location = useLocation()
-  const { user } = useAuth()
-  const [cartItemCount, setCartItemCount] = useState(0)
+  const navigate = useNavigate()
+  
+  const tabs = [
+    { key: 'home', label: 'Home', icon: HomeOutlined, route: '/home' },
+    { key: 'spots', label: 'Spots', icon: EnvironmentOutlined, route: '/spots' },
+    { key: 'cart', label: 'Cart', icon: ShoppingCartOutlined, route: '/cart' },
+    { key: 'wallet', label: 'Wallet', icon: WalletOutlined, route: '/wallet' },
+    { key: 'bookings', label: 'Orders', icon: CreditCardOutlined, route: '/bookings' },
+    { key: 'profile', label: 'Profile', icon: UserOutlined, route: '/profile' }
+  ]
 
-  useEffect(() => {
-    // 更新购物车数量
-    const updateCartCount = async () => {
-      try {
-        const count = await cartService.getCartItemCount()
-        setCartItemCount(count)
-      } catch (error) {
-        console.error('获取购物车数量失败:', error)
-        setCartItemCount(0)
-      }
-    }
-
-    // 初始化购物车数量
-    updateCartCount()
+  // 根据当前路径确定活跃的标签
+  const getCurrentActiveTab = () => {
+    const currentPath = location.pathname
     
-    // 设置定期更新购物车数量
-    const interval = setInterval(updateCartCount, 5000) // 每5秒更新一次
-
-    return () => {
-      clearInterval(interval)
+    // 如果传入了 activeTab，优先使用
+    if (activeTab) {
+      return activeTab
     }
-  }, [])
+    
+    // 根据路径匹配对应的标签
+    const matchedTab = tabs.find(tab => {
+      if (tab.route === currentPath) {
+        return true
+      }
+      // 对于动态路由，检查路径是否以该路由开头
+      if (tab.key === 'destinations' && currentPath.startsWith('/spot/')) {
+        return true
+      }
+      return false
+    })
+    
+    return matchedTab?.key || 'home'
+  }
 
-  const handleCartClick = () => {
-    if (user) {
-      navigate('/cart')
-    } else {
-      navigate('/login')
+  const currentActiveTab = getCurrentActiveTab()
+
+  const handleTabClick = (tabKey: string) => {
+    const tab = tabs.find(t => t.key === tabKey)
+    if (tab) {
+      navigate(tab.route)
     }
-  }
-
-  const handleSearchClick = () => {
-    navigate('/search')
-  }
-
-  const handleProfileClick = () => {
-    if (user) {
-      navigate('/profile')
-    } else {
-      navigate('/login')
+    // 如果传入了 onTabChange 回调，也调用它
+    if (onTabChange) {
+      onTabChange(tabKey)
     }
-  }
-
-  const getPageTitle = () => {
-    const path = location.pathname
-    if (path === '/' || path === '/home') return 'TripApp'
-    if (path === '/search') return '搜索'
-    if (path === '/destinations') return '景点'
-    if (path === '/bookings') return '我的订单'
-    if (path === '/wallet') return '我的钱包'
-    if (path === '/profile') return '个人中心'
-    if (path === '/cart') return '购物车'
-    if (path === '/travel') return '旅行'
-    if (path.startsWith('/spot/')) return '景点详情'
-    return 'TripApp'
-  }
-
-  // 不在某些页面显示顶部导航栏
-  const hiddenPages = ['/login', '/register']
-  if (hiddenPages.includes(location.pathname)) {
-    return null
   }
 
   return (
-    <div className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* 左侧标题 */}
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">
-              {getPageTitle()}
-            </h1>
-          </div>
-
-          {/* 右侧操作按钮 */}
-          <div className="flex items-center space-x-4">
-            {/* 搜索按钮 */}
-            <button
-              onClick={handleSearchClick}
-              className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* 通知按钮 */}
-            <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-              <Bell className="w-5 h-5" />
-            </button>
-
-            {/* 购物车按钮 */}
-            <button
-              onClick={handleCartClick}
-              className="relative p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartItemCount > 99 ? '99+' : cartItemCount}
-                </span>
-              )}
-            </button>
-
-            {/* 用户头像 */}
-            <button
-              onClick={handleProfileClick}
-              className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              {user ? (
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-                  {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
-              ) : (
-                <User className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Card 
+      className="fixed top-0 left-0 w-full rounded-2xl border-t"
+      style={{ zIndex: 1000 }}
+    >
+      <Row justify="space-around" align="middle" gutter={[16, 0]}>
+         <Space>
+            <Avatar 
+              size={32} 
+              style={{ backgroundColor: '#1890ff' }}
+              icon={<Plane size={16} />}
+            />
+            <Title level={4} style={{ margin: 0, color: '#1f2937' }}>TripApp</Title>
+          </Space>
+        {tabs.map((tab) => {
+          const IconComponent = tab.icon
+          return (
+            <Col key={tab.key}>
+              <Button 
+                type={currentActiveTab === tab.key ? 'primary' : 'text'}
+                onClick={() => handleTabClick(tab.key)}
+                style={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  height: 'auto',
+                  minWidth: '80px',
+                  padding: '8px 12px',
+                  border: 'none',
+                  boxShadow: 'none'
+                }}
+              >
+                <IconComponent style={{ fontSize: '20px', marginBottom: '2px' }} />
+                <Text style={{ fontSize: '12px', fontWeight: 500 }}>{tab.label}</Text>
+              </Button>
+            </Col>
+          )
+        })}
+      </Row>
+    </Card>
   )
 }
 

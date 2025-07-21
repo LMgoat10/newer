@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography, Modal } from 'antd'
 import {
-  DashboardOutlined,
   UserOutlined,
   ShoppingCartOutlined,
   RetweetOutlined,
@@ -31,11 +30,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { logout } = useAuth()
 
   const menuItems = [
-    {
-      key: '/admin/dashboard',
-      icon: <DashboardOutlined />,
-      label: '仪表盘',
-    },
     {
       key: '/admin/users',
       icon: <UserOutlined />,

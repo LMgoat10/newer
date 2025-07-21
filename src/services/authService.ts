@@ -234,11 +234,11 @@ export class AuthService {
 // 文件上传服务
 export class FileService {
   // 上传头像
-  static async uploadAvatar(file: File): Promise<ApiResponse<{ fileName: string; url: string }>> {
+  static async uploadAvatar(file: File): Promise<ApiResponse<{ fileName: string; message: string; status: number }>> {
     const formData = new FormData()
     formData.append('avatar', file)
 
-    return apiRequest<ApiResponse<{ fileName: string; url: string }>>('/api/upload/avatar', {
+    return apiRequest<ApiResponse<{ fileName: string; message: string; status: number }>>('/api/upload/avatar', {
       method: 'POST',
       body: formData,
       headers: {}, // 不设置Content-Type，让浏览器自动设置multipart/form-data

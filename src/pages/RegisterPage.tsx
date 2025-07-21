@@ -27,8 +27,8 @@ import {
   FacebookOutlined,
   TwitterOutlined
 } from '@ant-design/icons'
-import type { UploadFile, UploadProps } from 'antd'
-import { AuthService, FileService } from '../services/authService'
+import type { UploadProps } from 'antd'
+import { AuthService } from '../services/authService'
 import { useNavigate } from 'react-router-dom'
 
 const { Title, Text, Link } = Typography
@@ -49,74 +49,20 @@ interface RegisterFormData {
 function RegisterPage({ onNavigate }: RegisterPageProps) {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [avatarFile, setAvatarFile] = useState<UploadFile | null>(null)
-  const [avatarUrl, setAvatarUrl] = useState<string>('')
+  const [avatarFileName, setAvatarFileName] = useState<string>('')
   const navigate = useNavigate()
 
   // 处理头像上传
   const handleAvatarChange: UploadProps['onChange'] = (info) => {
-    console.log('Avatar change info:', info.file)
-    
-    const file = info.file.originFileObj || info.file
-    if (file) {
-      // 简化处理，直接保存info.file并添加必要属性
-      const uploadFile = {
-        ...info.file,
-        status: 'done' as const,
-        originFileObj: file
-      }
-      
-      const reader = new FileReader()
-      reader.addEventListener('load', () => {
-        setAvatarUrl(reader.result as string)
-      })
-      reader.readAsDataURL(file as File)
-      setAvatarFile(uploadFile as UploadFile)
-      console.log('Set avatar file:', uploadFile)
+    if (info.file.status === 'done') {
+      setAvatarFileName(info.file.response.fileName)
     }
-  }
-
-  // 头像上传前验证
-  const beforeUpload = (file: File) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg'
-    if (!isJpgOrPng) {
-      message.error('只能上传 JPG/PNG 格式的图片!')
-      return false
-    }
-    const isLt2M = file.size / 1024 / 1024 < 2
-    if (!isLt2M) {
-      message.error('图片大小不能超过 2MB!')
-      return false
-    }
-    
-    // 返回false阻止自动上传，我们手动处理文件预览
-    return false
   }
 
   // 处理注册表单提交
   const handleRegister = async (values: RegisterFormData) => {
     try {
       setLoading(true)
-      
-      let avatarFileName = ''
-      
-      console.log('Current avatarFile state:', avatarFile)
-      
-      // 如果有头像，先上传头像
-      if (avatarFile?.originFileObj) {
-        try {
-          console.log('Uploading avatar file:', avatarFile.originFileObj)
-          const uploadResponse = await FileService.uploadAvatar(avatarFile.originFileObj as File)
-          if (uploadResponse.data) {
-            avatarFileName = uploadResponse.data.fileName
-          }
-        } catch (uploadError) {
-          console.error('头像上传失败:', uploadError)
-          message.warning('头像上传失败，将使用默认头像')
-        }
-      } else {
-        console.log('No avatar file to upload')
-      }
 
       // 准备注册数据
       const registerData = {
@@ -124,7 +70,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
         email: values.email,
         password: values.password,
         phone: values.phone,
-        avatarFileName
+        avatarFileName: avatarFileName,
       }
 
       // 调用注册API
@@ -203,12 +149,11 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
               listType="picture-card"
               className="avatar-uploader"
               showUploadList={false}
-              beforeUpload={beforeUpload}
+              action={`${window.baseURL}/api/upload/avatar`}
               onChange={handleAvatarChange}
-              style={{ display: 'inline-block' }}
             >
-              {avatarUrl ? (
-                <Avatar size={80} src={avatarUrl} />
+              {avatarFileName ? (
+                <Avatar size={80} src={`${window.baseURL}/api/user/avatar/${avatarFileName}`} />
               ) : (
                 <div className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-full hover:border-blue-500 transition-colors">
                   <CameraOutlined style={{ fontSize: '24px', color: '#666' }} />
