@@ -41,7 +41,6 @@ function Layout({ children }: LayoutProps) {
 
       <Layoutantd className="min-h-screen bg-gray-50" style={{paddingLeft: '8px', paddingRight: '8px' }}>
         {children}
-        
         {/* Add some bottom padding to account for fixed navigation */}
         <div className="h-20"></div>
       </Layoutantd>

@@ -8,11 +8,29 @@ export interface User {
   name: string
   email: string
   phone: string
-  avatar?: string
+  avatarFileName?: string
   memberLevel: string
   memberPoints: number
-  memberExpDate: string
-  createdAt: string
+  joinDate: Date
+  idCard?: string
+  address?: string
+  totalOrders: number
+  balance?: number
+  role?: string
+}
+
+// 后端返回的用户数据接口
+interface BackendUserData {
+  userId: number
+  name: string
+  email: string
+  phone: string
+  avatarFileName?: string
+  memberLevel: string
+  joinDate: string
+  totalOrders: number
+  points: number
+  balance: number
 }
 
 // 认证上下文接口
@@ -41,17 +59,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // 计算是否已认证
   const isAuthenticated = !!user
 
+  // 转换后端用户数据到前端格式
+  const transformUserData = (backendData: BackendUserData): User => {
+    return {
+      id: backendData.userId.toString(), // 将number转为string
+      name: backendData.name,
+      email: backendData.email,
+      phone: backendData.phone,
+      avatarFileName: backendData.avatarFileName,
+      memberLevel: backendData.memberLevel,
+      memberPoints: backendData.points, // 后端是points，前端是memberPoints
+      joinDate: new Date(backendData.joinDate),
+      totalOrders: backendData.totalOrders,
+      balance: backendData.balance,
+      // 可选字段保持为undefined
+      idCard: undefined,
+      address: undefined
+    }
+  }
+
   // 初始化时检查认证状态
   useEffect(() => {
     const initAuth = async () => {
       const token = AuthService.getAuthToken()
       if (token) {
         try {
-          const response = await AuthService.getCurrentUser(token)
-          if (response.data) {
-            setUser(response.data as User)
+           // 检查是否是管理员token
+          if (token.startsWith('admin-token-')) {
+            // 恢复管理员用户状态
+            const adminUser: User = {
+              id: 'admin-001',
+              name: 'admin',
+              email: 'admin@admin.com',
+              phone: '13800138000',
+              avatarFileName: '',
+              memberLevel: 'ADMIN',
+              memberPoints: 0,
+              balance: 0,
+              totalOrders: 0,
+              joinDate: new Date(),
+              role: 'ADMIN'
+            }
+            console.log('恢复管理员状态:', adminUser)
+            setUser(adminUser)
           } else {
-            AuthService.clearAuthToken()
+            const response = await AuthService.getCurrentUser(token)
+            if (response.data) {
+              // 检查返回的数据格式，如果有userId字段说明是后端格式
+              const backendData = response.data as BackendUserData | User
+              let userData: User
+              
+              if ('userId' in backendData) {
+                // 后端格式，需要转换
+                userData = transformUserData(backendData as BackendUserData)
+              } else {
+                // 前端格式，直接使用
+                userData = backendData as User
+              }
+              
+              setUser(userData)
+              // 确保用户ID被存储
+              AuthService.setUserId(userData.id)
+              console.log('认证初始化成功，用户ID:', userData.id)
+            } else {
+              AuthService.clearAuthToken()
+            }
           }
         } catch (error) {
           console.error('认证初始化失败:', error)
@@ -68,12 +140,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true)
+      // 检查是否是管理员账户
+      if (email === 'admin' && password === '123456') {
+        // 创建管理员用户对象
+        const adminUser: User = {
+          id: 'admin-001',
+          name: 'admin',
+          email: 'admin@admin.com',
+          phone: '13800138000',
+          avatarFileName: '',
+          memberLevel: 'ADMIN',
+          memberPoints: 0,
+          balance: 0,
+          totalOrders: 0,
+          joinDate: new Date(),
+          role: 'ADMIN'
+        }
+        
+        // 设置一个管理员专用的token
+        AuthService.setAuthToken('admin-token-' + Date.now())
+        setUser(adminUser)
+        console.log('管理员登录成功:', adminUser)
+        return true
+      }
+
       const response = await AuthService.login({ email, password }) 
       if (response.status === 200 && response.token) {
         AuthService.setAuthToken(response.token)
         if (response.data) {
           console.log('登录成功:', response.data)
-          setUser(response.data as User)
+          // 转换后端数据格式
+          const userData = transformUserData(response.data as BackendUserData)
+          setUser(userData)
+          // 存储用户ID到localStorage
+          AuthService.setUserId(userData.id)
+          console.log('用户ID已存储:', userData.id)
         }
         return true
       }

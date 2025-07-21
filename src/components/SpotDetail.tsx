@@ -74,26 +74,36 @@ const SpotDetail: React.FC = () => {
     fetchSpot()
   }, [id])
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!spot || !selectedTicket) return
 
-    const success = cartService.addToCart(spot, selectedTicket, quantity)
-    if (success) {
-      setAddedToCart(true)
-      message.success('门票已添加到购物车')
-      setTimeout(() => setAddedToCart(false), 2000)
-    } else {
+    try {
+      const success = await cartService.addToCart(spot, selectedTicket, quantity)
+      if (success) {
+        setAddedToCart(true)
+        message.success('门票已添加到购物车')
+        setTimeout(() => setAddedToCart(false), 2000)
+      } else {
+        message.error('添加失败，请重试')
+      }
+    } catch (error) {
+      console.error('添加到购物车失败:', error)
       message.error('添加失败，请重试')
     }
   }
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!spot || !selectedTicket) return
 
-    const success = cartService.addToCart(spot, selectedTicket, quantity)
-    if (success) {
-      navigate('/cart')
-    } else {
+    try {
+      const success = await cartService.addToCart(spot, selectedTicket, quantity)
+      if (success) {
+        navigate('/cart')
+      } else {
+        message.error('添加失败，请重试')
+      }
+    } catch (error) {
+      console.error('添加到购物车失败:', error)
       message.error('添加失败，请重试')
     }
   }
@@ -194,14 +204,20 @@ const SpotDetail: React.FC = () => {
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
           <Breadcrumb>
             <Breadcrumb.Item>
-              <Button type="link" onClick={() => navigate('/home')} style={{ padding: 0 }}>
+              <span
+                style={{ cursor: 'pointer', color: '#1890ff' }}
+                onClick={() => navigate('/home')}
+              >
                 首页
-              </Button>
+              </span>
             </Breadcrumb.Item>
             <Breadcrumb.Item>
-              <Button type="link" onClick={() => navigate('/destinations')} style={{ padding: 0 }}>
+              <span
+                style={{ cursor: 'pointer', color: '#1890ff' }}
+                onClick={() => navigate('/spots')}
+              >
                 景点列表
-              </Button>
+              </span>
             </Breadcrumb.Item>
             <Breadcrumb.Item>{spot.name}</Breadcrumb.Item>
           </Breadcrumb>

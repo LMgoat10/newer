@@ -142,7 +142,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               name="email"
               rules={[
                 { required: true, message: '请输入邮箱地址' },
-                { type: 'email', message: '请输入有效的邮箱地址' }
+                {
+                  validator: (_, value) => {
+                    if (!value) {
+                      return Promise.resolve()
+                    }
+                    // 如果是admin用户名，跳过邮箱验证
+                    if (value === 'admin') {
+                      return Promise.resolve()
+                    }
+                    // 其他情况验证邮箱格式
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                    if (emailRegex.test(value)) {
+                      return Promise.resolve()
+                    }
+                    return Promise.reject(new Error('请输入有效的邮箱地址'))
+                  }
+                }
               ]}
             >
               <Input
@@ -177,6 +193,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 <Link style={{ color: '#1890ff' }}>忘记密码？</Link>
               </Col>
             </Row>
+
+            {/* 管理员提示 */}
+            <div style={{
+              background: 'linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%)',
+              border: '1px solid #91d5ff',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '20px',
+              textAlign: 'center'
+            }}>
+              <Text type="secondary" style={{ fontSize: '13px' }}>
+                💡 管理员账号：admin / 密码：123456
+              </Text>
+            </div>
 
             <Form.Item>
               <Button

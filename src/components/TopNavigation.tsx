@@ -12,28 +12,23 @@ const TopNavigation: React.FC = () => {
 
   useEffect(() => {
     // 更新购物车数量
-    const updateCartCount = () => {
-      const count = cartService.getCartItemCount()
-      setCartItemCount(count)
+    const updateCartCount = async () => {
+      try {
+        const count = await cartService.getCartItemCount()
+        setCartItemCount(count)
+      } catch (error) {
+        console.error('获取购物车数量失败:', error)
+        setCartItemCount(0)
+      }
     }
 
     // 初始化购物车数量
     updateCartCount()
-
-    // 监听localStorage变化
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cart_items') {
-        updateCartCount()
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
     
-    // 设置定期更新，以防同一页面内的更新
-    const interval = setInterval(updateCartCount, 1000)
+    // 设置定期更新购物车数量
+    const interval = setInterval(updateCartCount, 5000) // 每5秒更新一次
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
     }
   }, [])

@@ -111,21 +111,123 @@ export class AuthService {
     })
   }
 
-
   // 存储认证信息
   static setAuthToken(token: string): void {
     localStorage.setItem('authToken', token)
   }
 
+  // 存储用户ID
+  static setUserId(userId: string): void {
+    localStorage.setItem('userId', userId)
+  }
+
   // 清除认证信息
   static clearAuthToken(): void {
     localStorage.removeItem('authToken')
+    localStorage.removeItem('userId') // 同时清除用户ID
   }
 
   // 获取认证token
   static getAuthToken(): string | null {
     console.log('获取token:', localStorage.getItem('authToken'))
     return localStorage.getItem('authToken')
+  }
+
+  // 获取用户ID
+  static getUserId(): string | null {
+    return localStorage.getItem('userId')
+  }
+
+  //获取用户头像
+  static async getUserAvatar(avatarFileName: string): Promise<string> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user/avatar/${avatarFileName}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${AuthService.getAuthToken()}`,
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // 将响应转换为 Blob
+      const blob = await response.blob()
+      // 创建 URL 对象
+      return URL.createObjectURL(blob)
+    } catch (error) {
+      console.error('获取头像失败:', error)
+      throw error
+    }
+  }
+
+  // 获取用户余额
+  static async getUserBalance(): Promise<number> {
+    try {
+      const response = await apiRequest<ApiResponse<{ balance: number }>>('/api/user/wallet/balance', {
+        method: 'GET',
+      })
+      
+      if (response.status === 200 && response.data) {
+        return response.data.balance
+      } else {
+        console.error('获取余额失败:', response.message)
+        return 0
+      }
+    } catch (error) {
+      console.error('获取用户余额失败:', error)
+      return 0
+    }
+  }
+
+  // 更新用户余额 (扣款)
+  static async deductBalance(amount: number, orderId: string, description: string = '订单支付'): Promise<boolean> {
+    try {
+      const response = await apiRequest<ApiResponse<{ newBalance: number }>>('/api/user/balance/deduct', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount,
+          orderId,
+          description
+        })
+      })
+      
+      if (response.status === 0 && response.data) {
+        console.log(`余额扣除成功，新余额: ${response.data.newBalance}`)
+        return true
+      } else {
+        console.error('余额扣除失败:', response.message)
+        return false
+      }
+    } catch (error) {
+      console.error('扣除用户余额失败:', error)
+      return false
+    }
+  }
+
+  // 充值用户余额
+  static async rechargeBalance(amount: number, description: string = '账户充值'): Promise<boolean> {
+    try {
+      const response = await apiRequest<ApiResponse<{ newBalance: number }>>('/api/user/balance/recharge', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount,
+          description
+        })
+      })
+      
+      if (response.status === 0 && response.data) {
+        console.log(`充值成功，新余额: ${response.data.newBalance}`)
+        return true
+      } else {
+        console.error('充值失败:', response.message)
+        return false
+      }
+    } catch (error) {
+      console.error('充值失败:', error)
+      return false
+    }
   }
 }
 

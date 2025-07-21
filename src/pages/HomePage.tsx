@@ -1,7 +1,6 @@
 import { 
   Card,
   Button,
-  Avatar,
   Space,
   Typography,
   Row,
@@ -10,16 +9,10 @@ import {
   Tag
 } from 'antd'
 import { 
-  Plane, 
-  Train, 
-  Hotel, 
-  Bus,
   MapPin
 } from 'lucide-react'
-import { popularDestinations, recentSearches } from '../data/destinations'
+import { popularDestinations } from '../data/destinations'
 import type { Destination } from '../data/destinations'
-import SearchForm from '../components/SearchForm'
-import type { Dayjs } from 'dayjs'
 import { useState, useEffect } from 'react'
 import { spotService } from '../services/spotService'
 import type { SpotItem } from '../services/spotService'
@@ -50,57 +43,14 @@ function HomePage({ onNavigate }: HomePageProps) {
     loadHotSpots()
   }, [])
 
-  // 处理搜索
-  const handleSearch = (searchData: {
-    from: string;
-    to: string;
-    departureDate: Dayjs | null;
-    returnDate?: Dayjs | null;
-    passengers: number;
-    tripType: string;
-  }) => {
-    console.log('Search data:', searchData);
-    // 导航到搜索结果页
-    onNavigate('/search-results', searchData);
-  };
-
-  // 处理景点点击
-  const handleSpotClick = (spot: SpotItem) => {
-    onNavigate('/spot/' + spot.id)
-  }
-
-  // 获取服务类型图标
-  const getServiceIcon = (type: string) => {
-    const iconProps = { size: 20, style: { color: '#fff' } }
-    switch (type) {
-      case 'flight': return <Plane {...iconProps} />
-      case 'train': return <Train {...iconProps} />
-      case 'hotel': return <Hotel {...iconProps} />
-      case 'bus': return <Bus {...iconProps} />
-      default: return <Plane {...iconProps} />
-    }
-  }
-
-  // 获取服务类型颜色
-  const getServiceColor = (type: string) => {
-    switch (type) {
-      case 'flight': return '#1890ff'
-      case 'train': return '#52c41a'
-      case 'hotel': return '#722ed1'
-      case 'bus': return '#fa8c16'
-      default: return '#1890ff'
-    }
-  }
-
-  // 处理服务类型点击
-  const handleServiceClick = (serviceType: string) => {
-    onNavigate('/search', { serviceType });
-  }
-
   // 处理热门目的地点击
   const handleDestinationClick = (destination: Destination) => {
     onNavigate('/destination-detail', { destination });
   }
+ 
+    const handleSpotClick = (spot: SpotItem) => {
+      onNavigate('/spot/' + spot.id)
+    }
 
   return (
     <div>

@@ -1,13 +1,12 @@
 import { Card, Button, Row, Col, Typography, Space, Avatar } from 'antd'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  SearchOutlined,
   UserOutlined,
   HomeOutlined,
   CreditCardOutlined,
-  GlobalOutlined,
   EnvironmentOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  WalletOutlined
 } from '@ant-design/icons'
 import { 
   Plane
@@ -26,9 +25,8 @@ function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
   const tabs = [
     { key: 'home', label: 'Home', icon: HomeOutlined, route: '/home' },
     { key: 'spots', label: 'Spots', icon: EnvironmentOutlined, route: '/spots' },
-    { key: 'travel', label: 'Travel', icon: GlobalOutlined, route: '/travel' },
-    { key: 'search', label: 'Search', icon: SearchOutlined, route: '/search' },
     { key: 'cart', label: 'Cart', icon: ShoppingCartOutlined, route: '/cart' },
+    { key: 'wallet', label: 'Wallet', icon: WalletOutlined, route: '/wallet' },
     { key: 'bookings', label: 'Orders', icon: CreditCardOutlined, route: '/bookings' },
     { key: 'profile', label: 'Profile', icon: UserOutlined, route: '/profile' }
   ]

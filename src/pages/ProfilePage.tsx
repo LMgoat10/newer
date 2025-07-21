@@ -11,7 +11,6 @@ import {
   Row,
   Col,
   Tag,
-  Progress,
   Form,
   Modal,
   Input,
@@ -35,7 +34,6 @@ import {
   TrophyOutlined,
   ExclamationCircleOutlined,
   ShareAltOutlined,
-  CrownOutlined,
   LockOutlined,
   EyeTwoTone,
   EyeInvisibleOutlined,
@@ -44,7 +42,6 @@ import {
   IdcardOutlined,
   EnvironmentOutlined
 } from '@ant-design/icons'
-import { mockUserProfile, memberLevels } from '../data/userData'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
@@ -111,7 +108,7 @@ const mockMenuItems = [
     title: '消息通知',
     icon: <BellOutlined />,
     description: '管理通知设置',
-    action: <Switch defaultChecked={mockUserProfile.preferences.notifications.push} size="small" />
+    action: <Switch defaultChecked={ true } size="small" />
   },
   {
     key: 'security',
@@ -138,18 +135,18 @@ const mockMenuItems = [
 ]
 
 // 计算下一等级所需积分
-const getNextLevelProgress = (currentLevel: string, points: number) => {
-  const levels = memberLevels as Record<string, { min: number; max: number; color: string; benefits: string[] }>
-  const current = levels[currentLevel]
-  if (!current) return { percent: 100, nextLevel: 'Max Level', pointsNeeded: 0 }
+// const getNextLevelProgress = (currentLevel: string, points: number) => {
+//   const levels = memberLevels as Record<string, { min: number; max: number; color: string; benefits: string[] }>
+//   const current = levels[currentLevel]
+//   if (!current) return { percent: 100, nextLevel: 'Max Level', pointsNeeded: 0 }
   
-  const percent = Math.min(((points - current.min) / (current.max - current.min)) * 100, 100)
-  const pointsNeeded = Math.max(current.max - points, 0)
-  const nextLevelKey = Object.keys(levels).find(level => levels[level].min > current.min)
-  const nextLevel = nextLevelKey || 'Max Level'
+//   const percent = Math.min(((points - current.min) / (current.max - current.min)) * 100, 100)
+//   const pointsNeeded = Math.max(current.max - points, 0)
+//   const nextLevelKey = Object.keys(levels).find(level => levels[level].min > current.min)
+//   const nextLevel = nextLevelKey || 'Max Level'
   
-  return { percent, nextLevel, pointsNeeded }
-}
+//   return { percent, nextLevel, pointsNeeded }
+// }
 
 function ProfilePage({ onNavigate }: ProfilePageProps) {
   const { logout, user } = useAuth()
@@ -192,10 +189,10 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
     }
   }, [avatarUrl])
   
-  const { percent, nextLevel, pointsNeeded } = getNextLevelProgress(
-    userProfile.memberLevel, 
-    userProfile.memberPoints || 0
-  )
+  // const { percent, nextLevel, pointsNeeded } = getNextLevelProgress(
+  //   userProfile.memberLevel, 
+  //   userProfile.memberPoints || 0
+  // )
 
   const handleMenuClick = (key: string) => {
     switch (key) {
@@ -497,7 +494,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
             </Text>
 
             {/* Member Progress */}
-            {nextLevel !== 'Max Level' && (
+            {/* {nextLevel !== 'Max Level' && (
               <div className="mb-4 px-4">
                 <div className="flex justify-between items-center mb-2">
                   <Text className="text-sm font-medium">
@@ -513,7 +510,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
                   size="small"
                 />
               </div>
-            )}
+            )} */}
 
             {/* Stats */}
             <Row gutter={16} className="mt-4">
@@ -592,13 +589,13 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
       </div>
 
       {/* Member Benefits Card */}
-      <div className="px-4 pb-4">
+      {/* <div className="px-4 pb-4">
         <Card className="rounded-2xl shadow-sm border-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
-              <CrownOutlined style={{ color: memberLevels[mockUserProfile.memberLevel].color, fontSize: '20px' }} />
+              <CrownOutlined style={{ color: memberLevels["Bronze"].color, fontSize: '20px' }} />
               <Title level={5} style={{ margin: 0 }}>
-                {mockUserProfile.memberLevel} Benefits
+                {userProfile.memberLevel} Benefits
               </Title>
             </div>
             <Button type="text" size="small" style={{ color: '#1890ff' }}>
@@ -607,7 +604,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
           </div>
           
           <Row gutter={[12, 12]}>
-            {memberLevels[mockUserProfile.memberLevel].benefits.slice(0, 4).map((benefit, index) => (
+            {memberLevels["Bronze"].benefits.slice(0, 4).map((benefit, index) => (
               <Col span={12} key={index}>
                 <div className="bg-blue-50 p-3 rounded-lg text-center">
                   <Text className="text-sm font-medium text-blue-700">
@@ -618,7 +615,7 @@ function ProfilePage({ onNavigate }: ProfilePageProps) {
             ))}
           </Row>
         </Card>
-      </div>
+      </div> */}
 
       {/* Menu Items */}
       <div className="px-4 pb-6">
