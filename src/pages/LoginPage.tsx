@@ -13,7 +13,6 @@ import {
   Col
 } from 'antd'
 import { 
-  ArrowLeftOutlined,
   MailOutlined,
   LockOutlined,
   EyeTwoTone,
@@ -67,14 +66,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     }
   }
 
-  const handleBack = () => {
-    if (onNavigate) {
-      onNavigate('/home')
-    } else {
-      navigate('/home')
-    }
-  }
-
   const handleRegister = () => {
     if (onNavigate) {
       onNavigate('/register')
@@ -90,7 +81,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       padding: '20px'
     }}>
       <div style={{
@@ -98,20 +88,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         margin: '0 auto',
         paddingTop: '40px'
       }}>
-        {/* 返回按钮 */}
-        <Button 
-          type="text" 
-          icon={<ArrowLeftOutlined />} 
-          style={{ 
-            color: 'white', 
-            marginBottom: '20px',
-            fontSize: '16px' 
-          }}
-          onClick={handleBack}
-        >
-          返回
-        </Button>
-
         <Card 
           style={{ 
             borderRadius: '20px',

@@ -23,12 +23,12 @@ function TopNavigation({ activeTab, onTabChange }: TopNavigationProps) {
   const navigate = useNavigate()
   
   const tabs = [
-    { key: 'home', label: 'Home', icon: HomeOutlined, route: '/home' },
-    { key: 'spots', label: 'Spots', icon: EnvironmentOutlined, route: '/spots' },
-    { key: 'cart', label: 'Cart', icon: ShoppingCartOutlined, route: '/cart' },
-    { key: 'wallet', label: 'Wallet', icon: WalletOutlined, route: '/wallet' },
-    { key: 'bookings', label: 'Orders', icon: CreditCardOutlined, route: '/bookings' },
-    { key: 'profile', label: 'Profile', icon: UserOutlined, route: '/profile' }
+    { key: 'home', label: '首页', icon: HomeOutlined, route: '/home' },
+    { key: 'spots', label: '景点', icon: EnvironmentOutlined, route: '/spots' },
+    { key: 'cart', label: '购物车', icon: ShoppingCartOutlined, route: '/cart' },
+    { key: 'wallet', label: '钱包', icon: WalletOutlined, route: '/wallet' },
+    { key: 'bookings', label: '订单', icon: CreditCardOutlined, route: '/bookings' },
+    { key: 'profile', label: '个人', icon: UserOutlined, route: '/profile' }
   ]
 
   // 根据当前路径确定活跃的标签

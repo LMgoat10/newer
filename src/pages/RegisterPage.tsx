@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '@ant-design/v5-patch-for-react-19';
 import { 
   Card, 
@@ -10,12 +10,11 @@ import {
   Upload,
   Avatar,
   Checkbox,
-  message,
   Row,
-  Col
+  Col,
+  App
 } from 'antd'
 import { 
-  ArrowLeftOutlined,
   UserOutlined,
   MailOutlined,
   LockOutlined,
@@ -40,6 +39,7 @@ interface RegisterPageProps {
 interface RegisterFormData {
   name: string
   email: string
+  verificationCode: string
   password: string
   confirmPassword: string
   phone: string
@@ -50,7 +50,98 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [avatarFileName, setAvatarFileName] = useState<string>('')
+  const [codeSending, setCodeSending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [codeVerified, setCodeVerified] = useState(false)
+  const [codeInputVisible, setCodeInputVisible] = useState(false)
   const navigate = useNavigate()
+  const { message } = App.useApp()
+
+  // 倒计时效果
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown])
+
+  // 发送验证码
+  const handleSendCode = async () => {
+    try {
+      const email = form.getFieldValue('email')
+      if (!email) {
+        message.error('请先输入邮箱地址')
+        return
+      }
+      
+      // 邮箱格式验证
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        message.error('请输入正确的邮箱格式')
+        return
+      }
+
+      setCodeSending(true)
+      
+      // 调用发送验证码API - 使用URL编码格式
+      const response = await fetch('http://localhost:8080/mail/send-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `email=${encodeURIComponent(email)}`
+      })
+
+      const result = await response.json()
+      
+      if (result.status === 0) {
+        message.success('验证码已发送，请查看您的邮箱')
+        setCountdown(60) // 60秒倒计时
+        setCodeInputVisible(true) // 显示验证码输入框
+      } else {
+        message.error(result.message || '发送验证码失败')
+      }
+    } catch (error) {
+      console.error('发送验证码错误:', error)
+      message.error('网络错误，请重试')
+    } finally {
+      setCodeSending(false)
+    }
+  }
+
+  // 验证邮箱验证码
+  const handleVerifyCode = async (email: string, code: string) => {
+    if (!email || !code || code.length !== 6) {
+      return false
+    }
+
+    try {
+      const response = await fetch('http://localhost:8080/mail/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        setCodeVerified(true)
+        return true
+      } else {
+        setCodeVerified(false)
+        message.error(result.message || '验证码验证失败')
+        return false
+      }
+    } catch (error) {
+      console.error('验证码验证错误:', error)
+      setCodeVerified(false)
+      return false
+    }
+  }
 
   // 处理头像上传
   const handleAvatarChange: UploadProps['onChange'] = (info) => {
@@ -64,16 +155,28 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
     try {
       setLoading(true)
 
-      // 准备注册数据
+      // 1. 确保验证码已验证
+      if (!codeInputVisible) {
+        message.error('请先发送验证码')
+        return
+      }
+      
+      if (!codeVerified) {
+        message.error('请先验证邮箱验证码')
+        return
+      }
+
+      // 2. 准备注册数据
       const registerData = {
         name: values.name,
         email: values.email,
+        verificationCode: values.verificationCode,
         password: values.password,
         phone: values.phone,
         avatarFileName: avatarFileName,
       }
 
-      // 调用注册API
+      // 3. 调用注册API
       const response = await AuthService.register(registerData)
 
       if (response.status === 0) {
@@ -102,29 +205,6 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-      {/* Header */}
-      <Card 
-        className="rounded-none shadow-sm" 
-        style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}
-      >
-        <div className="flex items-center">
-          <Button 
-            type="text" 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => {
-              if (onNavigate) {
-                onNavigate('/login')
-              } else {
-                navigate('/login')
-              }
-            }}
-            size="large"
-          />
-          <Title level={4} style={{ margin: '0 0 0 12px', color: '#1f2937' }}>
-            Create Account
-          </Title>
-        </div>
-      </Card>
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
@@ -134,11 +214,11 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
         >
           {/* Welcome Text */}
           <div className="text-center mb-8">
-            <Title level={2} style={{ marginBottom: '8px', color: '#1f2937' }}>
-              Join TripApp
+            <Title level={2} style={{ marginBottom: '8px', color: '#1890ff'  }}>
+              加入旅游订票系统
             </Title>
             <Text type="secondary" style={{ fontSize: '16px' }}>
-              Create your account to start your journey
+              创建您的账户以开始旅程
             </Text>
           </div>
 
@@ -158,14 +238,14 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
                 <div className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-full hover:border-blue-500 transition-colors">
                   <CameraOutlined style={{ fontSize: '24px', color: '#666' }} />
                   <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
-                    Upload
+                    上传头像
                   </Text>
                 </div>
               )}
             </Upload>
             <div className="mt-2">
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                Optional profile picture
+                可选的个人头像
               </Text>
             </div>
           </div>
@@ -187,7 +267,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
             >
               <Input
                 prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="Full Name"
+                placeholder="用户名"
                 style={{ borderRadius: '12px', height: '48px' }}
               />
             </Form.Item>
@@ -201,10 +281,64 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
             >
               <Input
                 prefix={<MailOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="Email Address"
+                placeholder="邮箱"
                 style={{ borderRadius: '12px', height: '48px' }}
+                onChange={() => {
+                  // 邮箱变化时重置验证状态
+                  setCodeVerified(false)
+                  setCountdown(0)
+                  setCodeInputVisible(false) // 隐藏验证码输入框
+                }}
+                suffix={
+                  <Button
+                    type="link"
+                    size="small"
+                    loading={codeSending}
+                    disabled={countdown > 0}
+                    onClick={handleSendCode}
+                    style={{ 
+                      padding: '0 8px',
+                      fontSize: '12px',
+                      height: 'auto'
+                    }}
+                  >
+                    {countdown > 0 ? `${countdown}s` : '发送验证码'}
+                  </Button>
+                }
               />
             </Form.Item>
+
+            {codeInputVisible && (
+              <Form.Item
+                name="verificationCode"
+                rules={[
+                  { required: true, message: 'Please enter verification code' },
+                  { len: 6, message: 'Verification code must be 6 digits' }
+                ]}
+              >
+                <Input
+                  placeholder="验证码"
+                  style={{ borderRadius: '12px', height: '48px' }}
+                  maxLength={6}
+                  onChange={async (e) => {
+                    const code = e.target.value
+                    const email = form.getFieldValue('email')
+                    
+                    // 当输入6位验证码时自动验证
+                    if (code.length === 6 && email) {
+                      await handleVerifyCode(email, code)
+                    } else {
+                      setCodeVerified(false)
+                    }
+                  }}
+                  suffix={
+                    codeVerified ? (
+                      <span style={{ color: '#52c41a', fontSize: '14px' }}>✓</span>
+                    ) : null
+                  }
+                />
+              </Form.Item>
+            )}
 
             <Form.Item
               name="phone"
@@ -218,7 +352,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
             >
               <Input
                 prefix={<PhoneOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="Phone Number"
+                placeholder="电话号码"
                 style={{ borderRadius: '12px', height: '48px' }}
               />
             </Form.Item>
@@ -226,17 +360,17 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
             <Form.Item
               name="password"
               rules={[
-                { required: true, message: 'Please enter your password' },
-                { min: 6, message: 'Password must be at least 6 characters' },
+                { required: true, message: '请输入密码' },
+                { min: 6, message: '密码必须至少6个字符' },
                 {
                   pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                  message: 'Password must contain uppercase, lowercase and number'
+                  message: '密码必须包含大写字母、小写字母和数字'
                 }
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="Password"
+                placeholder="密码"
                 iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
                 style={{ borderRadius: '12px', height: '48px' }}
               />
@@ -246,7 +380,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
               name="confirmPassword"
               dependencies={['password']}
               rules={[
-                { required: true, message: 'Please confirm your password' },
+                { required: true, message: '请确认密码' },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('password') === value) {
@@ -259,7 +393,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
             >
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="Confirm Password"
+                placeholder="密码"
                 iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
                 style={{ borderRadius: '12px', height: '48px' }}
               />
@@ -276,13 +410,13 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
               ]}
             >
               <Checkbox>
-                I agree to the{' '}
-                <Link onClick={() => message.info('Terms of Service')}>
-                  Terms of Service
+                我同意{' '}
+                <Link onClick={() => message.info('服务条款')}>
+                  服务条款
                 </Link>
-                {' '}and{' '}
-                <Link onClick={() => message.info('Privacy Policy')}>
-                  Privacy Policy
+                {' '}和{' '}
+                <Link onClick={() => message.info('隐私政策')}>
+                  隐私政策
                 </Link>
               </Checkbox>
             </Form.Item>
@@ -300,7 +434,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
                   fontWeight: '600'
                 }}
               >
-                Create Account
+                注册
               </Button>
             </Form.Item>
           </Form>
@@ -308,7 +442,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
           {/* Social Registration */}
           <div className="mt-6">
             <Divider>
-              <Text type="secondary">Or continue with</Text>
+              <Text type="secondary">或使用以下方式注册</Text>
             </Divider>
             
             <Row gutter={12}>
@@ -357,12 +491,12 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
           {/* Login Link */}
           <div className="text-center mt-8">
             <Text type="secondary">
-              Already have an account?{' '}
+              已经有账户了？{' '}
               <Link 
                 onClick={() => onNavigate('/login')}
                 style={{ fontWeight: '600' }}
               >
-                Sign In
+                登录
               </Link>
             </Text>
           </div>
