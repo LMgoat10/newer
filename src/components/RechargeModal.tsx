@@ -102,7 +102,7 @@ function RechargeModal({ visible, onClose, onSuccess }: RechargeModalProps) {
               </Radio>
             </Space>
           </Radio.Group>
-        </Form.Item>
+        </Form.Item>  
 
         <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>

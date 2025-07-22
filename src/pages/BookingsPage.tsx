@@ -128,6 +128,19 @@ const BookingsPage: React.FC = () => {
       // 清除状态避免重复显示
       window.history.replaceState({}, document.title)
     }
+    
+    // 检查是否是支付宝支付的待支付状态
+    if (location.state?.isPending) {
+      const { payMethod, totalAmount, newOrderNumbers } = location.state
+      const orderCount = newOrderNumbers?.length || 1
+      
+      if (payMethod === PayMethod.ALIPAY) {
+        message.info(`已创建 ${orderCount} 个订单，支付金额 ¥${totalAmount?.toFixed(2)}。请在支付宝页面完成支付。`)
+      }
+      
+      // 清除状态避免重复显示
+      window.history.replaceState({}, document.title)
+    }
   }, [loadOrders, location.state])
 
   const handleViewDetail = (order: TicketOrder) => {

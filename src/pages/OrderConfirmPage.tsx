@@ -30,6 +30,7 @@ import {
 import { orderService } from '../services/orderService'
 import { cartService } from '../services/cartService'
 import { AuthService } from '../services/authService'
+import { paymentStatusService } from '../services/paymentStatusService'
 import { PayMethod, PayMethodText, type CreateOrderRequest } from '../types/order'
 import type { CartItem } from '../services/cartService'
 import dayjs from 'dayjs'
@@ -49,6 +50,7 @@ const OrderConfirmPage: React.FC = () => {
   
   const [loading, setLoading] = useState(false)
   const [userBalance, setUserBalance] = useState<number>(0)
+  const [hasPendingPayment, setHasPendingPayment] = useState(false)
   const cartItems = selectedCartItems
   
   useEffect(() => {
@@ -70,6 +72,10 @@ const OrderConfirmPage: React.FC = () => {
       }
     }
     
+    // 检查是否有待支付的订单
+    const pendingData = localStorage.getItem('pendingOrderData')
+    setHasPendingPayment(!!pendingData)
+    
     loadUserBalance()
   }, [])
 
@@ -83,12 +89,133 @@ const OrderConfirmPage: React.FC = () => {
     return cartItems.reduce((sum, item) => sum + item.quantity, 0)
   }
 
+  // 支付宝支付处理函数
+  const handleAlipayPayment = async (values: { [key: string]: unknown }) => {
+    try {
+      const totalAmount = calculateTotal()
+      const orderSubject = `${cartItems[0].spotName}等${cartItems.length}个景点门票`
+      const traceNo = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      // 将订单数据保存到 localStorage，支付成功后创建订单
+      const orderDataList = cartItems.map(item => ({
+        attractionId: parseInt(item.spotId),
+        visitDate: (values.visitDate as dayjs.Dayjs).format('YYYY-MM-DD'),
+        quantity: item.quantity,
+        unitPrice: item.price,
+        totalAmount: item.price * item.quantity,
+        contactName: values.contactName as string,
+        contactPhone: values.contactPhone as string,
+        contactIdcard: values.contactIdcard as string,
+        address: values.address as string,
+        payMethod: PayMethod.ALIPAY, // 直接使用枚举值
+        cartItemIds: [item.id]
+      }))
+      
+      localStorage.setItem('pendingOrderData', JSON.stringify({
+        orderDataList,
+        cartItems,
+        totalAmount,
+        traceNo // 保存交易号，用于后续支付状态检查
+      }))
+      
+      // 使用 window.open 打开支付宝支付页面
+      const paymentUrl = `http://localhost:8080/alipay/pay?subject=${encodeURIComponent(orderSubject)}&traceNo=${traceNo}&totalAmount=${totalAmount}`
+      
+      console.log('支付参数:', {
+        subject: orderSubject,
+        traceNo: traceNo,
+        totalAmount: totalAmount
+      })
+      
+      // 在新窗口中打开支付页面
+      window.open(paymentUrl, '_blank')
+      
+      // 更新状态
+      setHasPendingPayment(true)
+      
+      // 提示用户
+      message.success('支付页面已打开，请在新窗口中完成支付后，点击"刷新订单状态"按钮')
+      
+    } catch (error) {
+      console.error('打开支付页面失败:', error)
+      message.error('打开支付页面失败，请重试')
+    }
+  }
+
+  // 检查支付状态并创建订单
+  const checkPaymentAndCreateOrder = async () => {
+    const pendingData = localStorage.getItem('pendingOrderData')
+    if (!pendingData) {
+      message.warning('没有待处理的支付订单')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { orderDataList, cartItems: savedCartItems, totalAmount, traceNo } = JSON.parse(pendingData)
+      
+      // 调用后端API检查支付状态
+      console.log('正在检查支付状态，交易号:', traceNo)
+      const paymentResult = await paymentStatusService.pollPaymentStatus(traceNo, 3, 2000)
+      
+      if (paymentResult.success && paymentResult.paid) {
+        // 支付成功，创建订单
+        const orders = await Promise.all(
+          orderDataList.map(async (orderData: CreateOrderRequest) => {
+            return await orderService.createOrder(orderData)
+          })
+        )
+        
+        console.log('Orders created after payment:', orders)
+        
+        // 检查是否所有订单都创建成功
+        const failedOrders = orders.filter(order => order.status !== 0)
+        
+        if (failedOrders.length === 0) {
+          // 清理购物车
+          const cartItemIds = savedCartItems.map((item: CartItem) => item.id)
+          await cartService.removeBatch(cartItemIds)
+          
+          // 清理 localStorage
+          localStorage.removeItem('pendingOrderData')
+          
+          // 跳转到订单页面
+          navigate('/bookings', { 
+            state: { 
+              newOrderIds: orders.map(order => order.orderId),
+              newOrderNumbers: orders.map(order => order.orderNumber),
+              showSuccess: true,
+              payMethod: PayMethod.ALIPAY,
+              totalAmount: totalAmount
+            } 
+          })
+        } else {
+          message.error('部分订单创建失败，请联系客服')
+        }
+      } else {
+        message.error(paymentResult.message || '支付未完成或支付失败，请重新支付')
+      }
+    } catch (error) {
+      console.error('创建订单失败:', error)
+      message.error('创建订单失败，请重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // 提交订单
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmitOrder = async (values: Record<string, any>) => {
     setLoading(true)
     try {
       const totalAmount = calculateTotal()
+      
+      // 如果是支付宝支付，先跳转支付，不创建订单
+      if (values.payMethod === PayMethod.ALIPAY) {
+        await handleAlipayPayment(values)
+        setLoading(false)
+        return
+      }
       
       // 如果选择余额支付，先检查余额是否足够
       if (values.payMethod === PayMethod.BALANCE) {
@@ -128,8 +255,9 @@ const OrderConfirmPage: React.FC = () => {
       })
       
       if (failedOrders.length === 0) {
-        // 如果使用余额支付，扣除余额
+        // 根据支付方式处理支付
         if (values.payMethod === PayMethod.BALANCE) {
+          // 余额支付
           const deductSuccess = await AuthService.deductBalance(
             totalAmount,
             orders.map(o => o.orderId).join(','),
@@ -140,26 +268,29 @@ const OrderConfirmPage: React.FC = () => {
             // 重新加载用户余额
             const newBalance = await AuthService.getUserBalance()
             setUserBalance(newBalance)
+            
+            // 清理购物车
+            const cartItemIds = cartItems.map(item => item.id)
+            await cartService.removeBatch(cartItemIds)
+            
+            // 跳转到订单页面
+            navigate('/bookings', { 
+              state: { 
+                newOrderIds: orders.map(order => order.orderId),
+                newOrderNumbers: orders.map(order => order.orderNumber),
+                showSuccess: true,
+                payMethod: values.payMethod,
+                totalAmount: totalAmount
+              } 
+            })
           } else {
             message.error('余额扣除失败，请联系客服')
-            return // 扣款失败则不继续执行
+            return
           }
+        } else if (values.payMethod === PayMethod.WECHAT) {
+          // 微信支付（暂未实现）
+          message.info('微信支付功能正在开发中，请选择其他支付方式')
         }
-        
-        // 所有订单创建成功，清理购物车
-        const cartItemIds = cartItems.map(item => item.id)
-        await cartService.removeBatch(cartItemIds)
-        
-        // 跳转到订单页面，让订单页面显示统一的成功消息
-        navigate('/bookings', { 
-          state: { 
-            newOrderIds: orders.map(order => order.orderId),
-            newOrderNumbers: orders.map(order => order.orderNumber),
-            showSuccess: true,
-            payMethod: values.payMethod,
-            totalAmount: totalAmount
-          } 
-        })
       } else {
         message.error(`部分订单创建失败，请重试`)
       }
@@ -357,6 +488,20 @@ const OrderConfirmPage: React.FC = () => {
                 订单汇总
               </Title>
               
+              {hasPendingPayment && (
+                <div style={{ 
+                  background: '#fff7e6', 
+                  border: '1px solid #ffd591', 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  marginBottom: '16px' 
+                }}>
+                  <Text style={{ color: '#d48806', fontSize: '14px' }}>
+                    📝 您有一个待支付的订单，请在支付宝完成支付后点击"刷新订单状态"
+                  </Text>
+                </div>
+              )}
+              
               <Descriptions column={1} size="small">
                 <Descriptions.Item label="商品数量">
                   <Text strong>{calculateTotalQuantity()} 件</Text>
@@ -375,21 +520,61 @@ const OrderConfirmPage: React.FC = () => {
                 </Text>
               </div>
 
-              <Button
-                type="primary"
-                size="large"
-                block
-                loading={loading}
-                onClick={() => form.submit()}
-                style={{
-                  height: '48px',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}
-              >
-                {loading ? '创建订单中...' : '确认支付'}
-              </Button>
+              {hasPendingPayment ? (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    loading={loading}
+                    onClick={checkPaymentAndCreateOrder}
+                    style={{
+                      height: '48px',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      marginBottom: '12px'
+                    }}
+                  >
+                    {loading ? '正在检查支付状态...' : '刷新订单状态'}
+                  </Button>
+                  <Button
+                    size="large"
+                    block
+                    onClick={() => {
+                      localStorage.removeItem('pendingOrderData')
+                      setHasPendingPayment(false)
+                      message.success('已取消待支付订单')
+                    }}
+                    style={{
+                      height: '48px',
+                      borderRadius: '8px',
+                      fontSize: '16px'
+                    }}
+                  >
+                    取消支付
+                  </Button>
+                </Space>
+              ) : (
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  loading={loading}
+                  onClick={() => form.submit()}
+                  style={{
+                    height: '48px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {loading ? '处理中...' : (
+                    form.getFieldValue('payMethod') === PayMethod.ALIPAY ? '跳转支付宝支付' : 
+                    form.getFieldValue('payMethod') === PayMethod.WECHAT ? '跳转微信支付' : '确认支付'
+                  )}
+                </Button>
+              )}
             </Card>
           </Col>
         </Row>

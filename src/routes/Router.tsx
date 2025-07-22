@@ -8,15 +8,10 @@ import OrderDetail from '../components/OrderDetail'
 import BookingsPage from '../pages/BookingsPage'
 import { 
   HomePage, 
-  SearchPage, 
-  SearchResultsPage, 
   WalletPage, 
   ProfilePage,
   LoginPage,
-  RegisterPage,
-  DestinationDetailPage,
-  TravelHomepage,
-  BookingPage
+  RegisterPage
 } from '../pages'
 import AdminRoutes from './AdminRoutes'
 import { useEffect } from 'react'
@@ -70,24 +65,8 @@ const Router = () => {
             element={<HomePage onNavigate={handleNavigate} />} 
             />
             <Route 
-            path="/travel" 
-            element={<TravelHomepage onNavigate={handleNavigate} />} 
-            />
-            <Route 
-            path="/search" 
-            element={<SearchPage onNavigate={handleNavigate} />} 
-            />
-            <Route 
-            path="/search-results" 
-            element={<SearchResultsPage onNavigate={handleNavigate} />} 
-            />
-            <Route 
             path="/spots" 
             element={<SpotsPage />} 
-            />
-            <Route 
-            path="/travel/:id" 
-            element={<DestinationDetailPage onNavigate={handleNavigate} />} 
             />
             <Route 
             path="/spots/:id" 
@@ -108,10 +87,6 @@ const Router = () => {
                 <OrderConfirmPage />
               </ProtectedRoute>
             } 
-            />
-            <Route 
-            path="/booking" 
-            element={<BookingPage onNavigate={handleNavigate} />} 
             />
             <Route 
             path="/bookings" 
