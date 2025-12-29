@@ -6,21 +6,15 @@ import {
   Row,
   Col,
   Rate,
-  Tag,
-  Avatar,
-  Statistic
+  Tag
 } from 'antd'
 import { 
   MapPin,
-  User,
-  Wallet,
-  ShoppingCart,
-  Calendar
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { spotService } from '../services/spotService'
-import { AuthService } from '../services/authService'
-import { useAuth } from '../hooks/useAuth'
+// import { AuthService } from '../services/authService'
+// import { useAuth } from '../hooks/useAuth'
 import type { SpotItem } from '../services/spotService'
 
 const { Title, Text } = Typography
@@ -32,13 +26,13 @@ interface HomePageProps {
 function HomePage({ onNavigate }: HomePageProps) {
   const [hotSpots, setHotSpots] = useState<SpotItem[]>([])
   const [spotsLoading, setSpotsLoading] = useState(true)
-  const [userBalance, setUserBalance] = useState<number>(0)
-  const [userStats, setUserStats] = useState({
-    totalOrders: 0,
-    pendingOrders: 0,
-    cartItems: 0
-  })
-  const { user } = useAuth()
+  // const [userBalance, setUserBalance] = useState<number>(0)
+  // const [userStats, setUserStats] = useState({
+  //   totalOrders: 0,
+  //   pendingOrders: 0,
+  //   cartItems: 0
+  // })
+  // const { user } = useAuth()
 
   // 加载热门景点
   useEffect(() => {
@@ -57,29 +51,29 @@ function HomePage({ onNavigate }: HomePageProps) {
   }, [])
 
   // 加载用户相关信息
-  useEffect(() => {
-    if (user) {
-      const loadUserInfo = async () => {
-        try {
-          // 加载用户余额
-          const balance = await AuthService.getUserBalance()
-          setUserBalance(balance)
+  // useEffect(() => {
+  //   if (user) {
+  //     const loadUserInfo = async () => {
+  //       try {
+  //         // 加载用户余额
+  //         const balance = await AuthService.getUserBalance()
+  //         setUserBalance(balance)
           
-          // 这里可以添加加载用户统计信息的逻辑
-          // 比如订单数量、购物车数量等
-          setUserStats({
-            totalOrders: 12, // 模拟数据
-            pendingOrders: 2,
-            cartItems: 3
-          })
-        } catch (error) {
-          console.error('加载用户信息失败:', error)
-        }
-      }
+  //         // 这里可以添加加载用户统计信息的逻辑
+  //         // 比如订单数量、购物车数量等
+  //         setUserStats({
+  //           totalOrders: 12, // 模拟数据
+  //           pendingOrders: 2,
+  //           cartItems: 3
+  //         })
+  //       } catch (error) {
+  //         console.error('加载用户信息失败:', error)
+  //       }
+  //     }
       
-      loadUserInfo()
-    }
-  }, [user])
+  //     loadUserInfo()
+  //   }
+  // }, [user])
  
     const handleSpotClick = (spot: SpotItem) => {
       onNavigate('/spot/' + spot.id)

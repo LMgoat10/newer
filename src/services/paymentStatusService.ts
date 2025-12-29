@@ -13,9 +13,10 @@ export interface PaymentStatusResponse {
     paymentTime?: string
   }
 }
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 class PaymentStatusService {
-  private baseURL = 'http://localhost:8080'
+  private baseURL = API_BASE_URL
 
   /**
    * 检查支付状态

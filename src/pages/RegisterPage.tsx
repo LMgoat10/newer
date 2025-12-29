@@ -86,7 +86,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
       setCodeSending(true)
       
       // 调用发送验证码API - 使用URL编码格式
-      const response = await fetch('http://localhost:8080/mail/send-code', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/mail/send-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -96,7 +96,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
 
       const result = await response.json()
       
-      if (result.status === 0) {
+      if (result.success || result.status === 0) {
         message.success('验证码已发送，请查看您的邮箱')
         setCountdown(60) // 60秒倒计时
         setCodeInputVisible(true) // 显示验证码输入框
@@ -118,7 +118,7 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/mail/verify-code', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/mail/verify-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -156,8 +156,8 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
       setLoading(true)
 
       // 1. 确保验证码已验证
-      if (!codeInputVisible) {
-        message.error('请先发送验证码')
+      if (!codeVerified) {
+        message.error('请先验证邮箱验证码')
         return
       }
       
@@ -308,13 +308,13 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
               />
             </Form.Item>
 
-            {codeInputVisible && (
               <Form.Item
                 name="verificationCode"
                 rules={[
                   { required: true, message: 'Please enter verification code' },
                   { len: 6, message: 'Verification code must be 6 digits' }
                 ]}
+                style={{ display: codeInputVisible ? 'block' : 'none' }}
               >
                 <Input
                   placeholder="验证码"
@@ -338,7 +338,6 @@ function RegisterPage({ onNavigate }: RegisterPageProps) {
                   }
                 />
               </Form.Item>
-            )}
 
             <Form.Item
               name="phone"

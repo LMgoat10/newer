@@ -119,7 +119,7 @@ const OrderConfirmPage: React.FC = () => {
       }))
       
       // 使用 window.open 打开支付宝支付页面
-      const paymentUrl = `http://localhost:8080/alipay/pay?subject=${encodeURIComponent(orderSubject)}&traceNo=${traceNo}&totalAmount=${totalAmount}`
+      const paymentUrl = `${import.meta.env.VITE_API_URL}/alipay/pay?subject=${encodeURIComponent(orderSubject)}&traceNo=${traceNo}&totalAmount=${totalAmount}`
       
       console.log('支付参数:', {
         subject: orderSubject,

@@ -69,7 +69,7 @@ const Router = () => {
             element={<SpotsPage />} 
             />
             <Route 
-            path="/spots/:id" 
+            path="/spot/:id" 
             element={<SpotDetail />} 
             />
             <Route 
